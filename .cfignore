@@ -1,0 +1,9 @@
+# Cloudflare Pages ignore file
+# Exclude cache files that exceed size limits
+
+.next/cache/
+node_modules/
+.git/
+tests/
+*.test.ts
+*.test.tsx
