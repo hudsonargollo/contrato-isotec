@@ -6,7 +6,7 @@ Sistema completo de gestão de contratos para instalação de energia solar foto
 
 ✅ **MVP Completo e Pronto para Deploy**
 
-- Wizard de criação de contratos (7 etapas)
+- Wizard de criação de contratos (7 etapas completas)
 - Visualização pública de contratos
 - Assinatura digital por email com código de verificação
 - Integração com Supabase (PostgreSQL)
