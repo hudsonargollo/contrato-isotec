@@ -98,7 +98,9 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - contracts/[uuid] (public contract view)
+     * - api routes (handled separately in middleware logic)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|contracts/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|contracts/|api/).*)',
+    '/api/contracts',
   ],
 };
