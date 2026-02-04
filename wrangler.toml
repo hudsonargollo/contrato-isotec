@@ -4,7 +4,6 @@ pages_build_output_dir = ".next"
 
 [env.production]
 name = "isotec-contract-system"
-route = "contratofacil.clubemkt.digital/isotec/*"
 
 [env.production.vars]
 NODE_VERSION = "18"
