@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "cleanup:data": "tsx scripts/cleanup-expired-data.ts",
+    "verify:db": "tsx scripts/verify-production-database.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",

@@ -153,30 +153,35 @@
 
 ---
 
-## 🗄️ Step 4: Database Setup (5 minutes)
+## 🗄️ Step 4: Database Setup (10 minutes)
 
-### Run Migrations
-- [ ] Go to https://app.supabase.com
-- [ ] Select project
-- [ ] Go to "SQL Editor"
-- [ ] Run migration 1: `create_profiles_table.sql`
-- [ ] Run migration 2: `create_contracts_table.sql`
-- [ ] Run migration 3: `create_contract_items_table.sql`
-- [ ] Run migration 4: `create_audit_logs_table.sql`
-- [ ] Run migration 5: `create_verification_codes_table.sql`
+**📖 See detailed guide:** `docs/deployment/SUPABASE_PRODUCTION_DEPLOY.md`  
+**📋 Quick checklist:** `docs/deployment/SUPABASE_DEPLOY_CHECKLIST.md`
 
-### Verify Tables
-- [ ] Go to "Table Editor"
-- [ ] Verify `profiles` table exists
-- [ ] Verify `contracts` table exists
-- [ ] Verify `contract_items` table exists
-- [ ] Verify `audit_logs` table exists
-- [ ] Verify `verification_codes` table exists
+### Link Project
+```bash
+- [ ] supabase link --project-ref <your-project-ref>
+```
 
-### Check RLS
-- [ ] Verify RLS policies are active
-- [ ] Test read access
-- [ ] Test write access (should require auth)
+### Push Migrations
+```bash
+- [ ] supabase db push
+```
+
+### Verify Deployment
+```bash
+- [ ] npm run verify:db
+```
+
+### Create Admin User
+- [ ] Create user in Supabase Auth
+- [ ] Create profile record with `super_admin` role
+- [ ] Test admin login
+
+### Configure Backups
+- [ ] Enable Point-in-Time Recovery (if Pro plan)
+- [ ] Verify backup schedule
+- [ ] Set retention period (7+ days)
 
 ---
 
@@ -365,6 +370,8 @@ Deployment is successful when:
 
 ## 📚 Reference Documents
 
+- `SUPABASE_PRODUCTION_DEPLOY.md` - **Complete Supabase deployment guide**
+- `SUPABASE_DEPLOY_CHECKLIST.md` - **Quick Supabase deployment checklist**
 - `DEPLOY_GITHUB_CLOUDFLARE.md` - Detailed deployment guide
 - `GIT_COMMANDS.md` - Git command reference
 - `PRODUCTION_READY.md` - System status

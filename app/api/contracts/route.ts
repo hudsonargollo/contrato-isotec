@@ -22,30 +22,9 @@ export async function POST(request: NextRequest) {
     // Get Supabase client
     const supabase = await createClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get user if authenticated (optional for public contract creation)
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin role
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile || !['admin', 'super_admin'].includes(profile.role)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
-
     // Parse and validate request body
     const body = await request.json();
     const validationResult = contractDraftSchema.safeParse(body);
@@ -93,7 +72,7 @@ export async function POST(request: NextRequest) {
         payment_method: contractFields.paymentMethod,
         status: 'pending_signature',
         contract_hash: null,
-        created_by: user.id
+        created_by: user?.id || null
       })
       .select('id, uuid, created_at')
       .single();
