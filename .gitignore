@@ -19,6 +19,7 @@ dist-ssr
 # Misc
 .DS_Store
 *.pem
+*.example.md
 
 # Debug
 npm-debug.log*
