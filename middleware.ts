@@ -43,8 +43,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') || 
-      request.nextUrl.pathname.startsWith('/api/contracts')) {
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
     if (!user) {
       // Redirect to login if not authenticated
       const redirectUrl = new URL('/login', request.url);
@@ -67,6 +66,24 @@ export async function middleware(request: NextRequest) {
     // Enforce MFA for admin users (Requirement 11.2)
     // Note: MFA verification is handled in the login flow
     // This middleware just ensures the session is valid
+  }
+
+  // Protect contract listing API (GET /api/contracts) but allow public contract creation (POST /api/contracts)
+  if (request.nextUrl.pathname === '/api/contracts' && request.method === 'GET') {
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user has admin role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   return response;
