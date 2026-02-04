@@ -1,0 +1,7 @@
+name = "contrato-isotec"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = ".vercel/output/static"
+
+[env.production]
+name = "contrato-isotec"
+route = { pattern = "contrato-isotec.pages.dev", custom_domain = true }
