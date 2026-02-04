@@ -44,7 +44,7 @@ ALTER TABLE public.verification_codes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can insert verification codes"
   ON public.verification_codes
   FOR INSERT
-  USING (TRUE);
+  WITH CHECK (TRUE);
 
 -- RLS Policy: Public can view their own verification codes
 CREATE POLICY "Public can view own verification codes"
@@ -85,4 +85,3 @@ COMMENT ON COLUMN public.verification_codes.code IS '6-digit numeric verificatio
 COMMENT ON COLUMN public.verification_codes.expires_at IS 'Code expiration timestamp (15 minutes from creation)';
 COMMENT ON COLUMN public.verification_codes.attempts IS 'Number of verification attempts made';
 COMMENT ON COLUMN public.verification_codes.max_attempts IS 'Maximum allowed verification attempts (default: 5)';
-

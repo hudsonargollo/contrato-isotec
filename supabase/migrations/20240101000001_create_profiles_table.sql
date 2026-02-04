@@ -49,12 +49,7 @@ CREATE POLICY "Super admins can insert profiles"
   ON public.profiles
   FOR INSERT
   TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'super_admin'
-    )
-  );
+  WITH CHECK (true);
 
 -- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

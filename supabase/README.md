@@ -11,7 +11,7 @@ The database schema consists of four main tables:
 3. **contract_items** - Dynamic equipment lists for contracts
 4. **audit_logs** - Immutable audit trail for signature events
 
-## Migration Files
+## Migration Files 
 
 Migrations are numbered sequentially and should be applied in order:
 
