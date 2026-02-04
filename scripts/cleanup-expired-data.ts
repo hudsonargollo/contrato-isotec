@@ -8,7 +8,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { DATA_RETENTION_POLICY, calculateDeletionDate } from '../lib/config/data-retention';
+import { DATA_RETENTION_POLICY } from '../lib/config/data-retention';
 
 // Initialize Supabase client with service role key for admin operations
 const supabase = createClient(

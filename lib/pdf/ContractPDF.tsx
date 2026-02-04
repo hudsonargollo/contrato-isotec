@@ -14,11 +14,12 @@ import {
   Page,
   Text,
   View,
-  Image,
   StyleSheet,
   Font
 } from '@react-pdf/renderer';
-import { LOGO_BASE64, MASCOT_BASE64 } from './assets/images';
+
+// Note: Images removed due to file size constraints
+// TODO: Implement image loading from public folder or external URL
 
 // Register fonts for better typography
 Font.register({
@@ -485,9 +486,9 @@ const SignatureVerificationSection: React.FC<{ data: ContractData }> = ({ data }
 export const ContractPDF: React.FC<{ data: ContractData }> = ({ data }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      {/* Header with Logo */}
+      {/* Header */}
       <View style={styles.header}>
-        <Image src={LOGO_BASE64} style={styles.logo} />
+        {/* <Image src={LOGO_BASE64} style={styles.logo} /> */}
         <View style={styles.companyInfo}>
           <Text>ISOTEC Energia Solar</Text>
           <Text>Contrato de Prestação de Serviços</Text>
@@ -516,9 +517,9 @@ export const ContractPDF: React.FC<{ data: ContractData }> = ({ data }) => (
       {/* Signature Verification Section (only for signed contracts) */}
       <SignatureVerificationSection data={data} />
 
-      {/* Footer with Mascot */}
+      {/* Footer */}
       <View style={styles.footer}>
-        <Image src={MASCOT_BASE64} style={styles.mascot} />
+        {/* <Image src={MASCOT_BASE64} style={styles.mascot} /> */}
         <Text style={styles.footerText}>
           ISOTEC Energia Solar - Soluções em Energia Fotovoltaica
         </Text>

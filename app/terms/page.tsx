@@ -6,7 +6,7 @@
  * Requirements: 11.6
  */
 
-import { Metadata } from 'next/metadata';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Termos de Uso | ISOTEC',

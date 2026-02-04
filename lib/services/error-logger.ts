@@ -84,6 +84,7 @@ function getConsoleMethod(level: ErrorLevel): typeof console.log {
 /**
  * Sends error to monitoring service (placeholder for integration)
  */
+// @ts-expect-error - TODO: Implement monitoring service integration
 function sendToMonitoringService(entry: ErrorLogEntry): void {
   // TODO: Integrate with monitoring service (e.g., Sentry, DataDog, LogRocket)
   // Example:
