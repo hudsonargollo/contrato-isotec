@@ -75,7 +75,7 @@ async function verifyRLS() {
 
   try {
     // Query to check RLS status
-    const { data, error } = await supabase.rpc('check_rls_status', {});
+    const { error } = await supabase.rpc('check_rls_status', {});
 
     if (error) {
       // If RPC doesn't exist, try direct query
@@ -190,7 +190,7 @@ async function verifyConnection() {
   console.log('\n🔌 Verifying Connection...\n');
 
   try {
-    const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+    const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
 
     if (error) {
       logTest('Database Connection', false, `Error: ${error.message}`);
