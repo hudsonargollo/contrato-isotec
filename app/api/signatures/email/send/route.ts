@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Verify contract exists and is pending signature
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
-      .select('id, uuid, status, contractor_email')
+      .select('id, uuid, status, contractor_email, contractor_name')
       .eq('id', contractId)
       .single();
 
