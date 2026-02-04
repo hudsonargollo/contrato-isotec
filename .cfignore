@@ -1,7 +1,12 @@
 # Cloudflare Pages ignore file
 # Exclude cache files that exceed size limits
 
-.next/cache/
+.next/cache
+node_modules
+.git
+.env.local
+.DS_Store
+*.log/
 node_modules/
 .git/
 tests/
