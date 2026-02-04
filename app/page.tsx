@@ -43,10 +43,10 @@ export default function Home() {
             </Link>
             
             <Link
-              href="/admin"
-              className="px-8 py-4 bg-ocean-500 text-white font-semibold rounded-lg shadow-md hover:bg-ocean-600 transition-all duration-200 active:scale-95"
+              href="/login"
+              className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-lg shadow-md hover:bg-white/20 transition-all duration-200 active:scale-95"
             >
-              Dashboard Admin
+              🔐 Login Admin
             </Link>
           </div>
 
