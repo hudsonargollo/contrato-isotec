@@ -1,0 +1,7 @@
+{
+  "name": "ISOTEC Solar-Noir Wizard",
+  "description": "A premium, high-tech solar energy contract generator and digital signature platform featuring a dark-themed 'Solar-Noir' aesthetic.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
