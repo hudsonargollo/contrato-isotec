@@ -1,9 +1,0 @@
-name = "isotec-contract-system"
-compatibility_date = "2024-02-04"
-pages_build_output_dir = ".next"
-
-[env.production]
-name = "isotec-contract-system"
-
-[env.production.vars]
-NODE_VERSION = "18"
