@@ -4,7 +4,7 @@ Sistema completo de gestão de contratos para instalação de energia solar foto
 
 ## 🚀 Status do Projeto
 
-✅ **MVP Completo e em Produção**
+✅ **MVP Completo e Pronto para Deploy**
 
 - Wizard de criação de contratos (7 etapas)
 - Visualização pública de contratos
@@ -12,7 +12,7 @@ Sistema completo de gestão de contratos para instalação de energia solar foto
 - Integração com Supabase (PostgreSQL)
 - Integração SMTP para envio de emails
 - 231 testes unitários passando
-- Deploy automatizado no Cloudflare Pages
+- Configurado para Cloudflare Pages
 
 ## 📋 Funcionalidades
 
