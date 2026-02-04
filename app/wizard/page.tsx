@@ -62,19 +62,28 @@ export default function WizardPage() {
         body: JSON.stringify(contractData),
       });
 
+      // Get response text first
       const responseText = await response.text();
+      console.log('Response status:', response.status);
       console.log('Response text:', responseText);
 
+      // Try to parse as JSON
       let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response:', responseText);
-        throw new Error('Invalid response from server');
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', responseText);
+          throw new Error(`Server returned invalid response: ${responseText.substring(0, 100)}`);
+        }
+      } else {
+        throw new Error('Server returned empty response');
       }
 
+      // Check if response was successful
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create contract');
+        const errorMessage = result?.error || result?.details || 'Failed to create contract';
+        throw new Error(errorMessage);
       }
       
       // Redirect to the public contract view
@@ -86,7 +95,8 @@ export default function WizardPage() {
       }
     } catch (error) {
       console.error('Error creating contract:', error);
-      alert(error instanceof Error ? error.message : 'Failed to create contract. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create contract. Please try again.';
+      alert(`Error: ${errorMessage}`);
     }
   };
 

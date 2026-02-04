@@ -60,14 +60,24 @@ export default function GoogleMapsLocationPicker({
         setIsLoading(true);
         setError(null);
 
+        console.log('Initializing Google Maps...');
         const loader = getGoogleMapsLoader();
+        console.log('Loader created, importing libraries...');
+        
         const { Map } = await loader.importLibrary('maps') as google.maps.MapsLibrary;
         const { Marker } = await loader.importLibrary('marker') as google.maps.MarkerLibrary;
 
-        if (!mapRef.current || !isMounted) return;
+        console.log('Libraries loaded successfully');
+
+        if (!mapRef.current || !isMounted) {
+          console.log('Map ref not available or component unmounted');
+          return;
+        }
 
         // Determine initial center
         const initialCenter = center || DEFAULT_MAP_CENTER;
+        
+        console.log('Creating map with center:', initialCenter);
         
         // Create map instance
         const map = new Map(mapRef.current, {
@@ -81,6 +91,7 @@ export default function GoogleMapsLocationPicker({
           fullscreenControl: true,
         });
 
+        console.log('Map created successfully');
         mapInstanceRef.current = map;
 
         // Create marker if we have an initial position

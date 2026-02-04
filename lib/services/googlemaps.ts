@@ -48,14 +48,19 @@ let loaderInstance: Loader | null = null;
 
 export function getGoogleMapsLoader(): Loader {
   if (!loaderInstance) {
-    if (!GOOGLE_MAPS_CONFIG.apiKey) {
-      throw new Error('Google Maps API key is not configured');
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      console.error('Google Maps API key is missing. Check NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.');
+      throw new Error('Google Maps API key is not configured. Please contact support.');
     }
     
+    console.log('Initializing Google Maps with API key:', apiKey.substring(0, 10) + '...');
+    
     loaderInstance = new Loader({
-      apiKey: GOOGLE_MAPS_CONFIG.apiKey,
+      apiKey: apiKey,
       version: 'weekly',
-      libraries: ['places', 'geocoding'],
+      libraries: ['places', 'geocoding', 'marker', 'maps'],
     });
   }
   
