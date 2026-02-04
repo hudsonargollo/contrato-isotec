@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -18,24 +19,24 @@ export default function Home() {
           Sistema de gestão de contratos para instalação de energia solar fotovoltaica
         </p>
         <div className="flex gap-4">
-          <a
+          <Link
             href="/wizard"
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
             Criar Contrato
-          </a>
-          <a
+          </Link>
+          <Link
             href="/dashboard"
             className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
             Dashboard Admin
-          </a>
-          <a
+          </Link>
+          <Link
             href="/contracts"
             className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
             Visualizar Contrato
-          </a>
+          </Link>
         </div>
       </div>
     </main>
