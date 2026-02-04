@@ -160,7 +160,7 @@ export function Step7Review({ onEditStep }: Step7ReviewProps) {
               <tr className="border-b border-gray-700">
                 <th className="text-left py-2">Item</th>
                 <th className="text-center py-2">Quantidade</th>
-                <th className="text-center py-2">Unidade</th>
+                <th className="text-center py-2">Fabricante</th>
               </tr>
             </thead>
             <tbody>

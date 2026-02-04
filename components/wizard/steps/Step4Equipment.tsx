@@ -13,8 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 
-const COMMON_UNITS = ['un', 'kg', 'm', 'm²', 'm³', 'L', 'cx'];
-
 export function Step4Equipment() {
   const {
     register,
@@ -31,7 +29,7 @@ export function Step4Equipment() {
     append({
       itemName: '',
       quantity: 1,
-      unit: 'un',
+      unit: '',
       sortOrder: fields.length,
     });
   };
@@ -117,22 +115,16 @@ export function Step4Equipment() {
 
                   <div className="space-y-2">
                     <Label htmlFor={`items.${index}.unit`}>
-                      Unidade <span className="text-red-500">*</span>
+                      Fabricante <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id={`items.${index}.unit`}
                       {...register(`items.${index}.unit`)}
-                      placeholder="un"
-                      list={`units-${index}`}
+                      placeholder="Ex: RONMA SOLAR"
                       className={
                         errors.items?.[index]?.unit ? 'border-red-500' : ''
                       }
                     />
-                    <datalist id={`units-${index}`}>
-                      {COMMON_UNITS.map((unit) => (
-                        <option key={unit} value={unit} />
-                      ))}
-                    </datalist>
                     {errors.items?.[index]?.unit && (
                       <p className="text-sm text-red-500">
                         {(errors.items[index] as any)?.unit?.message as string}

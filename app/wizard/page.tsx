@@ -38,21 +38,44 @@ export default function WizardPage() {
 
   const handleComplete = async (contract: ContractFormData) => {
     try {
+      // Filter out services that are not included
+      const filteredServices = contract.services.filter(s => s.included);
+      
+      // Prepare the contract data
+      const contractData = {
+        ...contract,
+        services: filteredServices,
+        // Ensure dates are properly formatted
+        installationDate: contract.installationDate 
+          ? new Date(contract.installationDate).toISOString() 
+          : undefined,
+      };
+
+      console.log('Submitting contract data:', contractData);
+
       // Call the API to create the contract
       const response = await fetch('/api/contracts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(contract),
+        body: JSON.stringify(contractData),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create contract');
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', responseText);
+        throw new Error('Invalid response from server');
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create contract');
+      }
       
       // Redirect to the public contract view
       if (result.contract?.uuid) {
