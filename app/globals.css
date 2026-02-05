@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import custom animations */
+@import '../styles/animations.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -29,6 +32,58 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* ISOTEC Theme Colors */
+    --solar-50: 60 100% 97%;
+    --solar-100: 55 91% 95%;
+    --solar-200: 52 98% 77%;
+    --solar-300: 50 97% 64%;
+    --solar-400: 48 96% 53%;
+    --solar-500: 38 92% 50%;
+    --solar-600: 32 95% 44%;
+    --solar-700: 26 90% 37%;
+    --solar-800: 23 83% 31%;
+    --solar-900: 21 77% 26%;
+    
+    --ocean-50: 214 100% 97%;
+    --ocean-100: 214 95% 93%;
+    --ocean-200: 213 97% 87%;
+    --ocean-300: 212 96% 78%;
+    --ocean-400: 213 94% 68%;
+    --ocean-500: 217 91% 60%;
+    --ocean-600: 221 83% 53%;
+    --ocean-700: 224 76% 48%;
+    --ocean-800: 226 71% 40%;
+    --ocean-900: 224 64% 33%;
+    
+    --energy-50: 138 76% 97%;
+    --energy-100: 140 84% 92%;
+    --energy-200: 141 79% 85%;
+    --energy-300: 142 77% 73%;
+    --energy-400: 142 69% 58%;
+    --energy-500: 142 71% 45%;
+    --energy-600: 142 76% 36%;
+    --energy-700: 142 72% 29%;
+    --energy-800: 142 64% 24%;
+    --energy-900: 143 61% 20%;
+    
+    --neutral-50: 0 0% 98%;
+    --neutral-100: 0 0% 96%;
+    --neutral-200: 0 0% 90%;
+    --neutral-300: 0 0% 83%;
+    --neutral-400: 0 0% 64%;
+    --neutral-500: 0 0% 45%;
+    --neutral-600: 0 0% 32%;
+    --neutral-700: 0 0% 25%;
+    --neutral-800: 0 0% 15%;
+    --neutral-900: 0 0% 9%;
+    --neutral-950: 0 0% 4%;
+    
+    /* Semantic Colors */
+    --success: 142 71% 45%;
+    --error: 0 84% 60%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
   }
 
   .dark {
@@ -57,6 +112,58 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* ISOTEC Theme Colors - Dark Mode */
+    --solar-50: 60 100% 97%;
+    --solar-100: 55 91% 95%;
+    --solar-200: 52 98% 77%;
+    --solar-300: 50 97% 64%;
+    --solar-400: 48 96% 53%;
+    --solar-500: 38 92% 50%;
+    --solar-600: 32 95% 44%;
+    --solar-700: 26 90% 37%;
+    --solar-800: 23 83% 31%;
+    --solar-900: 21 77% 26%;
+    
+    --ocean-50: 214 100% 97%;
+    --ocean-100: 214 95% 93%;
+    --ocean-200: 213 97% 87%;
+    --ocean-300: 212 96% 78%;
+    --ocean-400: 213 94% 68%;
+    --ocean-500: 217 91% 60%;
+    --ocean-600: 221 83% 53%;
+    --ocean-700: 224 76% 48%;
+    --ocean-800: 226 71% 40%;
+    --ocean-900: 224 64% 33%;
+    
+    --energy-50: 138 76% 97%;
+    --energy-100: 140 84% 92%;
+    --energy-200: 141 79% 85%;
+    --energy-300: 142 77% 73%;
+    --energy-400: 142 69% 58%;
+    --energy-500: 142 71% 45%;
+    --energy-600: 142 76% 36%;
+    --energy-700: 142 72% 29%;
+    --energy-800: 142 64% 24%;
+    --energy-900: 143 61% 20%;
+    
+    --neutral-50: 0 0% 98%;
+    --neutral-100: 0 0% 96%;
+    --neutral-200: 0 0% 90%;
+    --neutral-300: 0 0% 83%;
+    --neutral-400: 0 0% 64%;
+    --neutral-500: 0 0% 45%;
+    --neutral-600: 0 0% 32%;
+    --neutral-700: 0 0% 25%;
+    --neutral-800: 0 0% 15%;
+    --neutral-900: 0 0% 9%;
+    --neutral-950: 0 0% 4%;
+    
+    /* Semantic Colors - Dark Mode */
+    --success: 142 71% 45%;
+    --error: 0 84% 60%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
   }
 }
 
@@ -66,5 +173,69 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+  
+  h6 {
+    @apply text-base md:text-lg;
+  }
+  
+  p {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  
+  /* Improved text rendering */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Reading optimizations */
+  .prose {
+    max-width: 75ch;
+    line-height: 1.6;
+  }
+  
+  .prose p {
+    margin-bottom: 1.25em;
+  }
+  
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    margin-top: 2em;
+    margin-bottom: 1em;
+  }
+  
+  .prose h1:first-child, .prose h2:first-child, .prose h3:first-child, 
+  .prose h4:first-child, .prose h5:first-child, .prose h6:first-child {
+    margin-top: 0;
   }
 }

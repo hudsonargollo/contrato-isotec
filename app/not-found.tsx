@@ -29,7 +29,7 @@ export default function NotFound() {
 
           <div className="flex gap-4 justify-center">
             <Link href="/">
-              <Button variant="default">
+              <Button variant="primary">
                 Voltar para Início
               </Button>
             </Link>

@@ -65,7 +65,7 @@ export default function Error({
           )}
 
           <div className="flex gap-4">
-            <Button onClick={reset} variant="default">
+            <Button onClick={reset} variant="primary">
               Tentar Novamente
             </Button>
             <Button

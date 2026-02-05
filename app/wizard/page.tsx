@@ -57,9 +57,9 @@ export default function WizardPage() {
       const contractData = {
         ...contract,
         services: filteredServices,
-        // Ensure dates are properly formatted
+        // Convert Date to ISO string for API
         installationDate: contract.installationDate 
-          ? new Date(contract.installationDate).toISOString() 
+          ? contract.installationDate.toISOString() 
           : undefined,
       };
 

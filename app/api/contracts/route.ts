@@ -27,6 +27,12 @@ export async function POST(request: NextRequest) {
     
     // Parse and validate request body
     const body = await request.json();
+    
+    // Convert installationDate string to Date if present
+    if (body.installationDate && typeof body.installationDate === 'string') {
+      body.installationDate = new Date(body.installationDate);
+    }
+    
     const validationResult = contractDraftSchema.safeParse(body);
 
     if (!validationResult.success) {
