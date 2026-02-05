@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/validation/currency';
 import { formatCoordinates } from '@/lib/services/googlemaps';
 import { CheckCircle2, MapPin, Calendar, Zap, Package, Wrench, DollarSign } from 'lucide-react';
 import { EmailSignature } from '@/components/contract/EmailSignature';
+import { Grid, GridItem } from '@/components/ui/grid';
 
 interface ContractPageProps {
   params: Promise<{
@@ -48,21 +49,22 @@ export default async function ContractPage({ params }: ContractPageProps) {
     : 'A definir';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
+      <header className="bg-neutral-900 border-b border-neutral-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Image
                 src="/isotec-logo.webp"
                 alt="ISOTEC Logo"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
+                width={160}
+                height={53}
+                className="h-8 sm:h-10 lg:h-12 w-auto"
+                priority
               />
-              <div className="h-8 w-px bg-gray-700" />
-              <h1 className="text-xl font-semibold text-white">
+              <div className="h-6 sm:h-8 w-px bg-neutral-700" />
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white">
                 Contrato de Instalação Fotovoltaica
               </h1>
             </div>
@@ -71,24 +73,24 @@ export default async function ContractPage({ params }: ContractPageProps) {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="max-w-6xl mx-auto space-y-4">
           {/* Status Badge */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               {contract.status === 'signed' ? (
                 <>
-                  <CheckCircle2 className="w-6 h-6 text-green-500" />
-                  <span className="text-lg font-medium text-green-400">
+                  <CheckCircle2 className="w-6 h-6 text-energy-500" />
+                  <span className="text-lg font-medium text-energy-400">
                     Contrato Assinado
                   </span>
                 </>
               ) : (
                 <>
-                  <div className="w-6 h-6 rounded-full border-2 border-yellow-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                  <div className="w-6 h-6 rounded-full border-2 border-solar-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-solar-500 animate-pulse" />
                   </div>
-                  <span className="text-lg font-medium text-yellow-400">
+                  <span className="text-lg font-medium text-solar-400">
                     Aguardando Assinatura
                   </span>
                 </>
@@ -101,212 +103,229 @@ export default async function ContractPage({ params }: ContractPageProps) {
               alt="ISOTEC Mascot"
               width={80}
               height={80}
-              className="h-20 w-auto"
+              className="h-16 sm:h-20 w-auto"
             />
           </div>
 
-          {/* Contractor Information */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-yellow-500" />
-              Identificação do Contratante
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4 text-gray-300">
-              <div>
-                <p className="text-sm text-gray-400">Nome Completo</p>
-                <p className="text-lg font-medium">{contract.contractor_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">CPF</p>
-                <p className="text-lg font-medium">{formatCPF(contract.contractor_cpf)}</p>
-              </div>
-              {contract.contractor_email && (
+          {/* Critical Customer Information Grid - Prioritized at top */}
+          <Grid 
+            columns={{ mobile: 1, tablet: 2, desktop: 3 }}
+            gap="sm"
+            className="mb-4"
+          >
+            {/* Contractor Information - Most Critical */}
+            <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-solar-500" />
+                Identificação do Contratante
+              </h2>
+              <div className="space-y-2 text-neutral-300">
                 <div>
-                  <p className="text-sm text-gray-400">E-mail</p>
-                  <p className="text-lg font-medium">{contract.contractor_email}</p>
+                  <p className="text-xs text-neutral-400">Nome Completo</p>
+                  <p className="text-sm font-medium">{contract.contractor_name}</p>
                 </div>
-              )}
-              {contract.contractor_phone && (
                 <div>
-                  <p className="text-sm text-gray-400">Telefone</p>
-                  <p className="text-lg font-medium">{contract.contractor_phone}</p>
+                  <p className="text-xs text-neutral-400">CPF</p>
+                  <p className="text-sm font-medium">{formatCPF(contract.contractor_cpf)}</p>
                 </div>
-              )}
-            </div>
-          </section>
+                {contract.contractor_email && (
+                  <div>
+                    <p className="text-xs text-neutral-400">E-mail</p>
+                    <p className="text-sm font-medium break-all">{contract.contractor_email}</p>
+                  </div>
+                )}
+                {contract.contractor_phone && (
+                  <div>
+                    <p className="text-xs text-neutral-400">Telefone</p>
+                    <p className="text-sm font-medium">{contract.contractor_phone}</p>
+                  </div>
+                )}
+              </div>
+            </section>
 
-          {/* Installation Address */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-yellow-500" />
+            {/* Project Specifications - Critical for understanding scope */}
+            <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-solar-500" />
+                Especificações do Projeto
+              </h2>
+              <div className="space-y-2 text-neutral-300">
+                <div>
+                  <p className="text-xs text-neutral-400">Potência do Sistema</p>
+                  <p className="text-xl font-bold text-solar-400">
+                    {contract.project_kwp} kWp
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    Estimativa: ~{(contract.project_kwp * 120).toFixed(0)} kWh/mês
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-400 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    Data de Instalação
+                  </p>
+                  <p className="text-sm font-medium">{installationDateFormatted}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Financial Information - Critical for contract value */}
+            <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-solar-500" />
+                Informações Financeiras
+              </h2>
+              <div className="space-y-2 text-neutral-300">
+                <div>
+                  <p className="text-xs text-neutral-400">Valor Total do Contrato</p>
+                  <p className="text-xl font-bold text-energy-400">
+                    {formatCurrency(parseFloat(contract.contract_value))}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    Por kWp: {formatCurrency(parseFloat(contract.contract_value) / contract.project_kwp)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-400">Forma de Pagamento</p>
+                  <p className="text-sm font-medium">
+                    {contract.payment_method === 'pix' && 'PIX'}
+                    {contract.payment_method === 'cash' && 'Dinheiro'}
+                    {contract.payment_method === 'credit' && 'Cartão de Crédito'}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </Grid>
+
+          {/* Installation Address - Secondary priority, spans full width for better readability */}
+          <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-solar-500" />
               Endereço da Instalação
             </h2>
-            <div className="space-y-3 text-gray-300">
-              <div>
-                <p className="text-sm text-gray-400">CEP</p>
-                <p className="text-lg font-medium">{formatCEP(contract.address_cep)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Endereço</p>
-                <p className="text-lg font-medium">
+            <Grid 
+              columns={{ mobile: 1, tablet: 2, desktop: 4 }}
+              gap="sm"
+              className="text-neutral-300"
+            >
+              <GridItem>
+                <p className="text-xs text-neutral-400">CEP</p>
+                <p className="text-sm font-medium">{formatCEP(contract.address_cep)}</p>
+              </GridItem>
+              <GridItem span={2}>
+                <p className="text-xs text-neutral-400">Endereço</p>
+                <p className="text-sm font-medium">
                   {contract.address_street}, {contract.address_number}
                   {contract.address_complement && ` - ${contract.address_complement}`}
                 </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-400">Bairro</p>
-                  <p className="text-lg font-medium">{contract.address_neighborhood}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Cidade</p>
-                  <p className="text-lg font-medium">{contract.address_city}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Estado</p>
-                  <p className="text-lg font-medium">{contract.address_state}</p>
-                </div>
-              </div>
+              </GridItem>
+              <GridItem>
+                <p className="text-xs text-neutral-400">Bairro</p>
+                <p className="text-sm font-medium">{contract.address_neighborhood}</p>
+              </GridItem>
+              <GridItem>
+                <p className="text-xs text-neutral-400">Cidade</p>
+                <p className="text-sm font-medium">{contract.address_city}</p>
+              </GridItem>
+              <GridItem>
+                <p className="text-xs text-neutral-400">Estado</p>
+                <p className="text-sm font-medium">{contract.address_state}</p>
+              </GridItem>
               {contract.location_latitude && contract.location_longitude && (
-                <div className="pt-3 border-t border-gray-700">
-                  <p className="text-sm text-gray-400">Coordenadas Geográficas</p>
-                  <p className="text-lg font-medium font-mono">
+                <GridItem span={2}>
+                  <p className="text-xs text-neutral-400">Coordenadas Geográficas</p>
+                  <p className="text-sm font-medium font-mono">
                     {formatCoordinates(
                       parseFloat(contract.location_latitude),
                       parseFloat(contract.location_longitude)
                     )}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Precisão de 8 casas decimais (~1mm) para geração de mockup 3D
+                  <p className="text-xs text-neutral-500">
+                    Precisão ~1mm para mockup 3D
                   </p>
-                </div>
+                </GridItem>
               )}
-            </div>
+            </Grid>
           </section>
 
-          {/* Project Specifications */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-yellow-500" />
-              Especificações do Projeto
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4 text-gray-300">
-              <div>
-                <p className="text-sm text-gray-400">Potência do Sistema</p>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {contract.project_kwp} kWp
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Estimativa de geração: ~{(contract.project_kwp * 120).toFixed(0)} kWh/mês
-                </p>
+          {/* Secondary Information Grid - Equipment and Services */}
+          <Grid 
+            columns={{ mobile: 1, tablet: 1, desktop: 2 }}
+            gap="sm"
+          >
+            {/* Equipment List */}
+            <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <Package className="w-4 h-4 text-solar-500" />
+                Lista de Equipamentos
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-neutral-300 text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-700">
+                      <th className="text-left py-2 px-2 text-xs font-medium text-neutral-400">
+                        Item
+                      </th>
+                      <th className="text-center py-2 px-2 text-xs font-medium text-neutral-400">
+                        Qtd
+                      </th>
+                      <th className="text-center py-2 px-2 text-xs font-medium text-neutral-400">
+                        Un.
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contract.contract_items
+                      ?.sort((a: any, b: any) => a.sort_order - b.sort_order)
+                      .map((item: any) => (
+                        <tr key={item.id} className="border-b border-neutral-800">
+                          <td className="py-2 px-2 text-xs">{item.item_name}</td>
+                          <td className="text-center py-2 px-2 text-xs">{item.quantity}</td>
+                          <td className="text-center py-2 px-2 text-xs">{item.unit}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               </div>
-              <div>
-                <p className="text-sm text-gray-400 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Data de Instalação
-                </p>
-                <p className="text-lg font-medium">{installationDateFormatted}</p>
-              </div>
-            </div>
-          </section>
+            </section>
 
-          {/* Equipment List - Will be rendered in Task 10.2 */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-yellow-500" />
-              Lista de Equipamentos
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-gray-300">
-                <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                      Item
-                    </th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
-                      Quantidade
-                    </th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
-                      Unidade
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contract.contract_items
-                    ?.sort((a: any, b: any) => a.sort_order - b.sort_order)
-                    .map((item: any) => (
-                      <tr key={item.id} className="border-b border-gray-800">
-                        <td className="py-3 px-4">{item.item_name}</td>
-                        <td className="text-center py-3 px-4">{item.quantity}</td>
-                        <td className="text-center py-3 px-4">{item.unit}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* Service Scope - Will be enhanced in Task 10.2 */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-yellow-500" />
-              Escopo de Serviços
-            </h2>
-            <div className="space-y-3">
-              {contract.services
-                ?.filter((service: any) => service.included)
-                .map((service: any, index: number) => (
-                  <div key={index} className="flex items-start gap-3 text-gray-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{service.description}</span>
-                  </div>
-                ))}
-            </div>
-          </section>
-
-          {/* Financial Information */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-yellow-500" />
-              Informações Financeiras
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4 text-gray-300">
-              <div>
-                <p className="text-sm text-gray-400">Valor Total do Contrato</p>
-                <p className="text-3xl font-bold text-green-400">
-                  {formatCurrency(parseFloat(contract.contract_value))}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Valor por kWp: {formatCurrency(parseFloat(contract.contract_value) / contract.project_kwp)}
-                </p>
+            {/* Service Scope */}
+            <section className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-solar-500" />
+                Escopo de Serviços
+              </h2>
+              <div className="space-y-2">
+                {contract.services
+                  ?.filter((service: any) => service.included)
+                  .map((service: any, index: number) => (
+                    <div key={index} className="flex items-start gap-2 text-neutral-300">
+                      <CheckCircle2 className="w-4 h-4 text-energy-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{service.description}</span>
+                    </div>
+                  ))}
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Forma de Pagamento</p>
-                <p className="text-lg font-medium">
-                  {contract.payment_method === 'pix' && 'PIX'}
-                  {contract.payment_method === 'cash' && 'Dinheiro'}
-                  {contract.payment_method === 'credit' && 'Cartão de Crédito'}
-                </p>
-              </div>
-            </div>
-          </section>
+            </section>
+          </Grid>
 
           {/* Signature Section */}
           {contract.status === 'pending_signature' && (
-            <EmailSignature 
-              contractId={contract.id}
-              contractorEmail={contract.contractor_email || undefined}
-            />
+            <div className="mt-4">
+              <EmailSignature 
+                contractId={contract.id}
+                contractorEmail={contract.contractor_email || undefined}
+              />
+            </div>
           )}
 
           {contract.status === 'signed' && contract.signed_at && (
-            <section className="bg-green-900/20 border border-green-700 rounded-lg p-6">
+            <section className="bg-energy-900/20 border border-energy-700 rounded-xl p-4 sm:p-6 mt-4">
               <div className="text-center">
-                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                <h3 className="text-xl font-semibold text-green-400 mb-2">
+                <CheckCircle2 className="w-10 h-10 text-energy-500 mx-auto mb-2" />
+                <h3 className="text-lg font-semibold text-energy-400 mb-1">
                   Contrato Assinado
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-sm text-neutral-300">
                   Assinado em{' '}
                   {new Date(contract.signed_at).toLocaleDateString('pt-BR', {
                     day: '2-digit',
@@ -317,7 +336,7 @@ export default async function ContractPage({ params }: ContractPageProps) {
                   })}
                 </p>
                 {contract.contract_hash && (
-                  <p className="text-xs text-gray-500 mt-2 font-mono">
+                  <p className="text-xs text-neutral-500 mt-1 font-mono">
                     Hash: {contract.contract_hash.substring(0, 16)}...
                   </p>
                 )}
@@ -328,8 +347,8 @@ export default async function ContractPage({ params }: ContractPageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-700 bg-gray-900/50 mt-12">
-        <div className="container mx-auto px-4 py-6 text-center text-gray-400 text-sm">
+      <footer className="border-t border-neutral-700 bg-neutral-900 mt-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-neutral-400 text-sm">
           <p>© 2024 ISOTEC - Soluções em Energia Solar</p>
           <p className="mt-1">Contrato gerado digitalmente e protegido por assinatura eletrônica</p>
         </div>

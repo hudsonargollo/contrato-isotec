@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Loader2, MapPin } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 import { formatCEP } from '@/lib/validation/cep';
 import { lookupCEP, ViaCEPError, getViaCEPErrorMessage } from '@/lib/services/viacep';
 import { geocodeAddress } from '@/lib/services/googlemaps';
@@ -40,6 +40,18 @@ export function Step2Address() {
 
   const cepValue = watch('addressCEP');
   const stateValue = watch('addressState');
+  const streetValue = watch('addressStreet');
+  const cityValue = watch('addressCity');
+
+  // Check if address is sufficiently filled
+  const addressFilled = Boolean(
+    cepValue && streetValue && cityValue && stateValue
+  );
+
+  // Create address string for display
+  const addressString = addressFilled 
+    ? `${streetValue}, ${cityValue} - ${stateValue}, ${formatCEP(cepValue)}`
+    : undefined;
 
   // Handle CEP lookup
   const handleCEPLookup = async () => {
@@ -117,14 +129,11 @@ export function Step2Address() {
             <Button
               type="button"
               onClick={handleCEPLookup}
-              disabled={isLoadingCEP}
+              loading={isLoadingCEP}
+              loadingText="Buscando..."
               variant="secondary"
             >
-              {isLoadingCEP ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
+              <Search className="w-4 h-4" />
               <span className="ml-2">Buscar</span>
             </Button>
           </div>
@@ -285,6 +294,8 @@ export function Step2Address() {
               : undefined
           }
           onLocationChange={handleLocationChange}
+          addressFilled={addressFilled}
+          addressString={addressString}
         />
       </div>
 

@@ -51,8 +51,13 @@ export function getGoogleMapsLoader(): Loader {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
     if (!apiKey) {
-      console.error('Google Maps API key is missing. Check NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.');
-      throw new Error('Google Maps API key is not configured. Please contact support.');
+      console.warn('Google Maps API key is missing. Check NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.');
+      throw new Error('Google Maps API key is not configured');
+    }
+    
+    if (apiKey.length < 20) {
+      console.warn('Google Maps API key appears to be invalid (too short)');
+      throw new Error('Google Maps API key appears to be invalid');
     }
     
     console.log('Initializing Google Maps with API key:', apiKey.substring(0, 10) + '...');
@@ -64,6 +69,9 @@ export function getGoogleMapsLoader(): Loader {
       libraries: ['places', 'geocoding', 'marker', 'maps'],
       // Add retry logic for failed loads
       retries: 3,
+      // Add language and region for Brazil
+      language: 'pt-BR',
+      region: 'BR',
     });
   }
   

@@ -25,6 +25,7 @@ import {
   Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AdminLayout } from '@/components/ui/admin-layout';
 import { formatCPF } from '@/lib/validation/cpf';
 import { formatCEP } from '@/lib/validation/cep';
 import { formatCurrency } from '@/lib/validation/currency';
@@ -175,41 +176,41 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-solar-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-neutral-400">Carregando contrato...</p>
+      <AdminLayout userInfo={{ name: 'Administrador', role: 'Admin' }}>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-solar-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-neutral-400">Carregando contrato...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   if (error || !contract) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
-        <header className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <Link
-              href="/admin/contracts"
-              className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar aos Contratos
-            </Link>
-          </div>
-        </header>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <p className="text-red-400 text-xl mb-4">{error}</p>
-            <Link
-              href="/admin/contracts"
-              className="text-solar-400 hover:text-solar-300"
-            >
-              Voltar aos Contratos
-            </Link>
+      <AdminLayout userInfo={{ name: 'Administrador', role: 'Admin' }}>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Link
+            href="/admin/contracts"
+            className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar aos Contratos
+          </Link>
+          <div className="flex items-center justify-center min-h-[40vh]">
+            <div className="text-center">
+              <p className="text-red-400 text-xl mb-4">{error}</p>
+              <Link
+                href="/admin/contracts"
+                className="text-solar-400 hover:text-solar-300"
+              >
+                Voltar aos Contratos
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
@@ -222,9 +223,9 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
     : 'A definir';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
-      {/* Header */}
-      <header className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
+    <AdminLayout userInfo={{ name: 'Administrador', role: 'Admin' }}>
+      {/* Header with actions */}
+      <div className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
@@ -258,10 +259,10 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Contract Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -564,7 +565,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

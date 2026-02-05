@@ -2,19 +2,30 @@
 
 /**
  * Email Signature Component
- * Handles email-based contract signature flow
+ * Handles email-based contract signature flow with step-by-step interface
  * 
- * Requirements: 5.1, 5.2
+ * Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 9.2, 9.3
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mail, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/toast';
+import { Mail, CheckCircle2, AlertCircle, ArrowRight, RotateCcw, Shield, WifiOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EmailSignatureProps {
   contractId: string;
   contractorEmail?: string;
   onSignatureComplete?: () => void;
+}
+
+interface ErrorState {
+  type: 'network' | 'validation' | 'server' | 'expired' | 'invalid_code' | 'rate_limit';
+  message: string;
+  canRetry: boolean;
+  canResend: boolean;
 }
 
 export function EmailSignature({ 
@@ -26,13 +37,149 @@ export function EmailSignature({
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
   const [success, setSuccess] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [lastSentAt, setLastSentAt] = useState<Date | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const { addToast } = useToast();
+
+  // Network connectivity detection
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (!navigator.onLine) return; // Double check
+      
+      addToast({
+        title: 'Conexão Restaurada',
+        description: 'Você está online novamente.',
+        variant: 'success',
+        duration: 3000,
+      });
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      addToast({
+        title: 'Sem Conexão',
+        description: 'Verifique sua conexão com a internet.',
+        variant: 'warning',
+        duration: 0, // Don't auto-dismiss
+        action: {
+          label: 'Tentar Novamente',
+          onClick: () => window.location.reload(),
+        },
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check
+    setIsOnline(navigator.onLine);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [addToast]);
+
+  const getErrorFromResponse = (response: Response, data: any): ErrorState => {
+    switch (response.status) {
+      case 400:
+        if (data.error?.includes('email')) {
+          return {
+            type: 'validation',
+            message: 'E-mail inválido. Verifique o formato e tente novamente.',
+            canRetry: true,
+            canResend: false
+          };
+        }
+        return {
+          type: 'validation',
+          message: data.error || 'Dados inválidos. Verifique as informações.',
+          canRetry: true,
+          canResend: false
+        };
+      case 429:
+        return {
+          type: 'rate_limit',
+          message: 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.',
+          canRetry: false,
+          canResend: false
+        };
+      case 404:
+        return {
+          type: 'server',
+          message: 'Contrato não encontrado. Verifique se o link está correto.',
+          canRetry: false,
+          canResend: false
+        };
+      case 410:
+        return {
+          type: 'expired',
+          message: 'Código expirado. Solicite um novo código.',
+          canRetry: false,
+          canResend: true
+        };
+      case 422:
+        return {
+          type: 'invalid_code',
+          message: 'Código inválido. Verifique os 6 dígitos e tente novamente.',
+          canRetry: true,
+          canResend: true
+        };
+      case 500:
+      case 502:
+      case 503:
+        return {
+          type: 'server',
+          message: 'Erro no servidor. Tente novamente em alguns instantes.',
+          canRetry: true,
+          canResend: true
+        };
+      default:
+        return {
+          type: 'network',
+          message: 'Erro de conexão. Verifique sua internet e tente novamente.',
+          canRetry: true,
+          canResend: true
+        };
+    }
+  };
 
   const handleSendCode = async () => {
     if (!email) {
-      setError('Por favor, insira um e-mail válido');
+      setError({
+        type: 'validation',
+        message: 'Por favor, insira um e-mail válido',
+        canRetry: true,
+        canResend: false
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError({
+        type: 'validation',
+        message: 'Formato de e-mail inválido. Use o formato: exemplo@dominio.com',
+        canRetry: true,
+        canResend: false
+      });
+      return;
+    }
+
+    // Check network connectivity
+    if (!isOnline) {
+      setError({
+        type: 'network',
+        message: 'Sem conexão com a internet. Verifique sua conexão e tente novamente.',
+        canRetry: true,
+        canResend: false
+      });
       return;
     }
 
@@ -54,19 +201,86 @@ export function EmailSignature({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Falha ao enviar código');
+        const errorState = getErrorFromResponse(response, data);
+        setError(errorState);
+        
+        // Show toast for certain error types
+        if (errorState.type === 'rate_limit') {
+          addToast({
+            title: 'Limite Excedido',
+            description: errorState.message,
+            variant: 'warning',
+            duration: 8000,
+          });
+        } else if (errorState.type === 'server') {
+          addToast({
+            title: 'Erro no Servidor',
+            description: 'Nossos servidores estão temporariamente indisponíveis.',
+            variant: 'error',
+            duration: 6000,
+            action: {
+              label: 'Tentar Novamente',
+              onClick: () => {
+                setError(null);
+                handleSendCode();
+              },
+            },
+          });
+        }
+        return;
       }
 
       setExpiresAt(data.expiresAt);
+      setLastSentAt(new Date());
       setStep('code');
+      setRetryCount(0); // Reset retry count on success
+      
+      // Success toast
+      addToast({
+        title: 'Código Enviado',
+        description: `Código de verificação enviado para ${email}`,
+        variant: 'success',
+        duration: 4000,
+      });
       
       // In development, show the code
-      if (data.code) {
+      if (data.code && typeof window !== 'undefined') {
         console.log('Código de verificação:', data.code);
-        alert(`Código de verificação (DEV): ${data.code}`);
+        try {
+          if (window.alert) {
+            window.alert(`Código de verificação (DEV): ${data.code}`);
+          }
+        } catch (e) {
+          // Ignore alert errors in test environment
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar código');
+      const networkError = {
+        type: 'network' as const,
+        message: 'Erro de conexão. Verifique sua internet e tente novamente.',
+        canRetry: true,
+        canResend: true
+      };
+      
+      setError(networkError);
+      setRetryCount(prev => prev + 1);
+      
+      // Show toast for network errors with retry suggestion
+      addToast({
+        title: 'Erro de Conexão',
+        description: retryCount > 2 
+          ? 'Múltiplas tentativas falharam. Verifique sua conexão.'
+          : 'Falha na conexão. Tentando novamente...',
+        variant: 'error',
+        duration: 6000,
+        action: {
+          label: 'Tentar Novamente',
+          onClick: () => {
+            setError(null);
+            handleSendCode();
+          },
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -74,7 +288,34 @@ export function EmailSignature({
 
   const handleVerifyCode = async () => {
     if (!code || code.length !== 6) {
-      setError('Por favor, insira o código de 6 dígitos');
+      setError({
+        type: 'validation',
+        message: 'Por favor, insira o código de 6 dígitos recebido por e-mail',
+        canRetry: true,
+        canResend: true
+      });
+      return;
+    }
+
+    // Check if code contains only numbers
+    if (!/^\d{6}$/.test(code)) {
+      setError({
+        type: 'validation',
+        message: 'O código deve conter apenas números (6 dígitos)',
+        canRetry: true,
+        canResend: true
+      });
+      return;
+    }
+
+    // Check network connectivity
+    if (!isOnline) {
+      setError({
+        type: 'network',
+        message: 'Sem conexão com a internet. Verifique sua conexão e tente novamente.',
+        canRetry: true,
+        canResend: true
+      });
       return;
     }
 
@@ -96,10 +337,45 @@ export function EmailSignature({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Código inválido');
+        const errorState = getErrorFromResponse(response, data);
+        setError(errorState);
+        
+        // Show toast for specific error types
+        if (errorState.type === 'expired') {
+          addToast({
+            title: 'Código Expirado',
+            description: 'Solicite um novo código para continuar.',
+            variant: 'warning',
+            duration: 6000,
+            action: {
+              label: 'Reenviar Código',
+              onClick: () => {
+                setError(null);
+                handleResendCode();
+              },
+            },
+          });
+        } else if (errorState.type === 'invalid_code') {
+          addToast({
+            title: 'Código Inválido',
+            description: 'Verifique os 6 dígitos e tente novamente.',
+            variant: 'error',
+            duration: 5000,
+          });
+        }
+        return;
       }
 
       setSuccess(true);
+      setRetryCount(0); // Reset retry count on success
+      
+      // Success toast
+      addToast({
+        title: 'Assinatura Confirmada!',
+        description: 'Contrato assinado com sucesso.',
+        variant: 'success',
+        duration: 4000,
+      });
       
       // Call callback after a short delay to show success message
       setTimeout(() => {
@@ -111,191 +387,408 @@ export function EmailSignature({
         }
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao verificar código');
+      const networkError = {
+        type: 'network' as const,
+        message: 'Erro de conexão. Verifique sua internet e tente novamente.',
+        canRetry: true,
+        canResend: true
+      };
+      
+      setError(networkError);
+      setRetryCount(prev => prev + 1);
+      
+      // Show toast for network errors
+      addToast({
+        title: 'Erro de Conexão',
+        description: 'Falha ao verificar o código. Tente novamente.',
+        variant: 'error',
+        duration: 6000,
+        action: {
+          label: 'Tentar Novamente',
+          onClick: () => {
+            setError(null);
+            handleVerifyCode();
+          },
+        },
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
+    // Check if we can resend (rate limiting)
+    if (lastSentAt && Date.now() - lastSentAt.getTime() < 60000) { // 1 minute cooldown
+      const remainingSeconds = Math.ceil((60000 - (Date.now() - lastSentAt.getTime())) / 1000);
+      const rateLimitError = {
+        type: 'rate_limit' as const,
+        message: `Aguarde ${remainingSeconds} segundos antes de solicitar um novo código`,
+        canRetry: false,
+        canResend: false
+      };
+      
+      setError(rateLimitError);
+      
+      addToast({
+        title: 'Aguarde um Momento',
+        description: `Você pode solicitar um novo código em ${remainingSeconds} segundos.`,
+        variant: 'warning',
+        duration: 4000,
+      });
+      return;
+    }
+
     setCode('');
     setError(null);
-    setStep('email');
+    
+    addToast({
+      title: 'Reenviando Código',
+      description: 'Solicitando um novo código de verificação...',
+      variant: 'info',
+      duration: 3000,
+    });
+    
+    await handleSendCode();
   };
 
+  // Success state with animation - Mobile Optimized
   if (success) {
     return (
-      <div className="bg-green-900/20 border border-green-700 rounded-lg p-6">
-        <div className="text-center">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-green-400 mb-2">
-            Contrato Assinado com Sucesso!
-          </h3>
-          <p className="text-gray-300">
-            Sua assinatura foi registrada e o contrato está finalizado.
-          </p>
-        </div>
-      </div>
+      <Card className="bg-gradient-to-br from-energy-50 to-energy-100 border-energy-200 shadow-lg">
+        <CardContent className="p-6 sm:p-8">
+          <div className="text-center space-y-4 sm:space-y-6">
+            <div className="relative">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-energy-500 rounded-full flex items-center justify-center animate-bounce">
+                <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+              </div>
+              <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-energy-500/20 rounded-full animate-ping"></div>
+            </div>
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-energy-800 leading-tight">
+                Contrato Assinado com Sucesso!
+              </h3>
+              <p className="text-energy-700 text-base sm:text-lg leading-relaxed">
+                Sua assinatura foi registrada e o contrato está finalizado.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-energy-600 pt-2">
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-medium">Assinatura verificada e segura</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Mail className="w-6 h-6 text-yellow-500" />
-        <h3 className="text-xl font-semibold text-white">
-          Assinatura por E-mail
-        </h3>
+    <div className="space-y-6">
+      {/* Progress Indicator - Responsive */}
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4">
+        <div className={cn(
+          "flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300",
+          step === 'email' 
+            ? "bg-solar-500 border-solar-500 text-white" 
+            : "bg-energy-500 border-energy-500 text-white"
+        )}>
+          <Mail className="w-5 h-5 sm:w-5 sm:h-5" />
+        </div>
+        <div className={cn(
+          "h-1 w-12 sm:w-16 rounded-full transition-all duration-500",
+          step === 'code' ? "bg-energy-500" : "bg-neutral-200"
+        )}></div>
+        <div className={cn(
+          "flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300",
+          step === 'code' 
+            ? "bg-solar-500 border-solar-500 text-white" 
+            : "bg-neutral-100 border-neutral-300 text-neutral-400"
+        )}>
+          <Shield className="w-5 h-5 sm:w-5 sm:h-5" />
+        </div>
       </div>
 
-      {step === 'email' && (
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              E-mail para Assinatura
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-400 mt-2">
-              Um código de verificação de 6 dígitos será enviado para este e-mail.
-            </p>
-          </div>
+      {/* Network Status Indicator - Mobile Optimized */}
+      {!isOnline && (
+        <div className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+          <WifiOff className="w-5 h-5 sm:w-4 sm:h-4 text-red-500 flex-shrink-0" />
+          <span className="text-sm text-red-700 font-medium text-center">
+            Sem conexão com a internet
+          </span>
+        </div>
+      )}
 
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-700 rounded-md">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          )}
+      {/* Step Labels - Responsive */}
+      <div className="flex items-center justify-between text-center px-2">
+        <div className="flex-1">
+          <p className={cn(
+            "text-xs sm:text-sm font-medium transition-colors duration-300",
+            step === 'email' ? "text-solar-600" : "text-energy-600"
+          )}>
+            1. Inserir E-mail
+          </p>
+        </div>
+        <div className="flex-1">
+          <p className={cn(
+            "text-xs sm:text-sm font-medium transition-colors duration-300",
+            step === 'code' ? "text-solar-600" : "text-neutral-500"
+          )}>
+            2. Verificar Código
+          </p>
+        </div>
+      </div>
 
-          <Button
-            onClick={handleSendCode}
-            disabled={loading || !email}
-            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
-          >
-            {loading ? (
+      {/* Main Content Card */}
+      <Card className="shadow-lg border-neutral-200">
+        <CardHeader className="pb-4 px-4 sm:px-6">
+          <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
+            {step === 'email' ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Enviando...
+                <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-solar-500 flex-shrink-0" />
+                <span className="leading-tight">Assinatura por E-mail</span>
               </>
             ) : (
               <>
-                <Mail className="w-4 h-4 mr-2" />
-                Enviar Código
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-solar-500 flex-shrink-0" />
+                <span className="leading-tight">Verificação de Código</span>
               </>
             )}
-          </Button>
-        </div>
-      )}
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+          {step === 'email' && (
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-solar-50 border border-solar-200 rounded-lg p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-solar-800 font-medium leading-relaxed">
+                  📧 Um código de verificação de 6 dígitos será enviado para o seu e-mail
+                </p>
+              </div>
 
-      {step === 'code' && (
-        <div className="space-y-4">
-          <div className="bg-blue-900/20 border border-blue-700 rounded-md p-4">
-            <p className="text-sm text-blue-400">
-              Um código de verificação foi enviado para <strong>{email}</strong>
-            </p>
-            {expiresAt && (
-              <p className="text-xs text-gray-400 mt-1">
-                O código expira em 15 minutos
-              </p>
-            )}
-          </div>
+              <Input
+                type="email"
+                label="E-mail para Assinatura"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null); // Clear error on input
+                }}
+                icon={<Mail className="w-4 h-4 sm:w-5 sm:h-5" />}
+                size="lg"
+                disabled={loading}
+                className="text-base sm:text-lg" // Ensure good readability on mobile
+              />
 
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-300 mb-2">
-              Código de Verificação
-            </label>
-            <input
-              id="code"
-              type="text"
-              value={code}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                setCode(value);
-              }}
-              placeholder="000000"
-              maxLength={6}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-md text-white text-center text-2xl font-mono tracking-widest placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-400 mt-2">
-              Digite o código de 6 dígitos recebido por e-mail
-            </p>
-          </div>
+              {/* Error Display for Email Step - Mobile Optimized */}
+              {error && (
+                <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                    <p className="text-sm text-red-700 font-medium leading-relaxed break-words">{error.message}</p>
+                    
+                    {/* Recovery Options for Email Step - Mobile Optimized */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {error.canRetry && (
+                        <Button
+                          onClick={() => {
+                            setError(null);
+                            handleSendCode();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 min-h-[44px] w-full sm:w-auto"
+                          disabled={loading}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span>Tentar Novamente</span>
+                        </Button>
+                      )}
+                      
+                      {error.type === 'network' && (
+                        <Button
+                          onClick={() => window.location.reload()}
+                          variant="ghost"
+                          size="sm"
+                          className="text-neutral-600 hover:text-neutral-800 min-h-[44px] w-full sm:w-auto"
+                        >
+                          Recarregar Página
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-700 rounded-md">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-400">{error}</p>
+              <Button
+                onClick={handleSendCode}
+                disabled={loading || !email}
+                size="lg"
+                className="w-full min-h-[48px] sm:min-h-[52px] text-base sm:text-lg font-medium"
+                loading={loading}
+                loadingText="Enviando código..."
+              >
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+                <span>Enviar Código de Verificação</span>
+              </Button>
             </div>
           )}
 
-          <div className="flex gap-3">
-            <Button
-              onClick={handleVerifyCode}
-              disabled={loading || code.length !== 6}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Verificar e Assinar
-                </>
-              )}
-            </Button>
-
-            <Button
-              onClick={handleResendCode}
-              disabled={loading}
-              variant="outline"
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
-            >
-              Reenviar
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-6 pt-6 border-t border-gray-700">
-        <p className="text-xs text-gray-400 text-center">
-          Ao assinar, você concorda com os termos do contrato e confirma que todas as informações estão corretas.
-          A assinatura será registrada com seu e-mail, endereço IP e timestamp para fins legais.
-        </p>
-      </div>
-
-      {/* GOV.BR Signature - Coming Soon */}
-      <div className="mt-6 pt-6 border-t border-gray-700">
-        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 opacity-60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+          {step === 'code' && (
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-ocean-50 border border-ocean-200 rounded-lg p-3 sm:p-4 space-y-2">
+                <p className="text-xs sm:text-sm text-ocean-800 font-medium break-words">
+                  ✅ Código enviado para <strong className="break-all">{email}</strong>
+                </p>
+                {expiresAt && (
+                  <p className="text-xs text-ocean-600">
+                    ⏰ O código expira em 15 minutos
+                  </p>
+                )}
               </div>
-              <div>
-                <h4 className="text-sm font-semibold text-gray-300">Assinatura GOV.BR</h4>
-                <p className="text-xs text-gray-500">Assinatura digital com certificado ICP-Brasil</p>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-neutral-700">
+                  Código de Verificação
+                </label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setCode(value);
+                    if (error) setError(null); // Clear error on input
+                  }}
+                  placeholder="000000"
+                  maxLength={6}
+                  className={cn(
+                    "w-full px-4 sm:px-6 py-4 sm:py-4 text-center text-2xl sm:text-3xl font-mono tracking-[0.3em] sm:tracking-[0.5em] rounded-xl border-2 transition-all duration-200",
+                    "bg-white placeholder:text-neutral-300 focus:outline-none min-h-[60px] sm:min-h-[72px]",
+                    error 
+                      ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 bg-red-50/50" 
+                      : "border-neutral-200 focus:border-solar-500 focus:ring-4 focus:ring-solar-500/10",
+                    code.length === 6 && !error && "border-energy-500 bg-energy-50/50"
+                  )}
+                  disabled={loading}
+                />
+                <p className="text-xs text-neutral-500 text-center leading-relaxed">
+                  Digite o código de 6 dígitos recebido por e-mail
+                </p>
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                    <p className="text-sm text-red-700 font-medium leading-relaxed break-words">{error.message}</p>
+                    
+                    {/* Recovery Options - Mobile Optimized */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {error.canRetry && (
+                        <Button
+                          onClick={() => {
+                            setError(null);
+                            handleVerifyCode();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 min-h-[44px] w-full sm:w-auto"
+                        >
+                          <RotateCcw className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span>Tentar Novamente</span>
+                        </Button>
+                      )}
+                      
+                      {error.canResend && (
+                        <Button
+                          onClick={() => {
+                            setError(null);
+                            handleResendCode();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="border-solar-300 text-solar-700 hover:bg-solar-50 hover:border-solar-400 min-h-[44px] w-full sm:w-auto"
+                          disabled={loading}
+                        >
+                          <Mail className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span>Reenviar Código</span>
+                        </Button>
+                      )}
+                      
+                      {error.type === 'server' && (
+                        <Button
+                          onClick={() => window.location.reload()}
+                          variant="ghost"
+                          size="sm"
+                          className="text-neutral-600 hover:text-neutral-800 min-h-[44px] w-full sm:w-auto"
+                        >
+                          Recarregar Página
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={handleVerifyCode}
+                  disabled={loading || code.length !== 6}
+                  size="lg"
+                  className="flex-1 min-h-[48px] sm:min-h-[52px] text-base sm:text-lg font-medium order-2 sm:order-1"
+                  variant="secondary"
+                  loading={loading}
+                  loadingText="Verificando..."
+                >
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+                  <span>Verificar e Assinar</span>
+                </Button>
+
+                <Button
+                  onClick={handleResendCode}
+                  disabled={loading}
+                  variant="outline"
+                  size="lg"
+                  className="min-h-[48px] sm:min-h-[52px] min-w-[48px] sm:min-w-[52px] order-1 sm:order-2 sm:flex-shrink-0"
+                  title="Reenviar código"
+                >
+                  <RotateCcw className="w-4 h-4 sm:w-4 sm:h-4" />
+                  <span className="sm:hidden ml-2">Reenviar</span>
+                </Button>
               </div>
             </div>
-            <span className="px-3 py-1 bg-yellow-600/20 border border-yellow-600/30 rounded-full text-xs font-medium text-yellow-400">
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Legal Notice - Mobile Optimized */}
+      <Card className="bg-neutral-50 border-neutral-200">
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-xs text-neutral-600 text-center leading-relaxed">
+            🔒 Ao assinar, você concorda com os termos do contrato e confirma que todas as informações estão corretas.
+            A assinatura será registrada com seu e-mail, endereço IP e timestamp para fins legais.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* GOV.BR Signature - Coming Soon - Mobile Optimized */}
+      <Card className="bg-gradient-to-r from-neutral-50 to-neutral-100 border-neutral-200 opacity-75">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-ocean-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-ocean-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-semibold text-neutral-700 truncate">Assinatura GOV.BR</h4>
+                <p className="text-xs text-neutral-500 leading-tight">Assinatura digital com certificado ICP-Brasil</p>
+              </div>
+            </div>
+            <span className="px-2 sm:px-3 py-1 bg-solar-100 border border-solar-200 rounded-full text-xs font-medium text-solar-700 flex-shrink-0">
               EM BREVE
             </span>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

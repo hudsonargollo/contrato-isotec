@@ -24,12 +24,13 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { contractDraftSchema } from '@/lib/types/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { WizardProgress } from '@/components/ui/wizard-progress';
+import { Container } from '@/components/ui/container';
 
 // Import step components
 import { Step1ContractorInfo } from './steps/Step1ContractorInfo';
@@ -81,6 +82,7 @@ const WIZARD_STEPS = [
 export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   // Initialize React Hook Form with Zod validation
   const methods = useForm<ContractFormData>({
@@ -109,13 +111,12 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
     },
   });
 
-  const { handleSubmit, trigger } = methods;
-
-  // Calculate progress percentage
-  const progressPercentage = (currentStep / WIZARD_STEPS.length) * 100;
+  const { handleSubmit, trigger, formState } = methods;
 
   // Handle next step
   const handleNext = async () => {
+    setIsValidating(true);
+    
     // Validate current step fields before proceeding
     let fieldsToValidate: string[] = [];
     
@@ -144,8 +145,33 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
       ? await trigger(fieldsToValidate as any)
       : true;
     
+    setIsValidating(false);
+    
     if (isValid && currentStep < WIZARD_STEPS.length) {
       setCurrentStep(currentStep + 1);
+    }
+  };
+
+  // Check if current step has validation errors
+  const hasCurrentStepErrors = () => {
+    const { errors } = formState;
+    
+    switch (currentStep) {
+      case 1:
+        return !!(errors.contractorName || errors.contractorCPF || errors.contractorEmail || errors.contractorPhone);
+      case 2:
+        return !!(errors.addressCEP || errors.addressStreet || errors.addressNumber || 
+                 errors.addressNeighborhood || errors.addressCity || errors.addressState);
+      case 3:
+        return !!(errors.projectKWp || errors.installationDate);
+      case 4:
+        return !!(errors.items);
+      case 5:
+        return !!(errors.services);
+      case 6:
+        return !!(errors.contractValue || errors.paymentMethod);
+      default:
+        return false;
     }
   };
 
@@ -175,8 +201,8 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
+      <Container size="none" padding="none" className="max-w-4xl px-4 py-8">
         {/* Header with Logo */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -200,63 +226,24 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
           </Button>
         </div>
 
-        {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {WIZARD_STEPS.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`
-                      w-10 h-10 rounded-full flex items-center justify-center font-semibold
-                      transition-all duration-300
-                      ${
-                        currentStep > step.id
-                          ? 'bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 shadow-lg shadow-solar-500/30'
-                          : currentStep === step.id
-                          ? 'bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 ring-4 ring-solar-500/20 shadow-lg shadow-solar-500/50'
-                          : 'bg-neutral-700 text-neutral-400'
-                      }
-                    `}
-                  >
-                    {currentStep > step.id ? (
-                      <Check className="w-5 h-5" />
-                    ) : (
-                      step.id
-                    )}
-                  </div>
-                  <div className="mt-2 text-center hidden md:block">
-                    <p className={`text-xs font-medium ${currentStep >= step.id ? 'text-white' : 'text-neutral-500'}`}>
-                      {step.title}
-                    </p>
-                    <p className="text-xs text-neutral-500">{step.description}</p>
-                  </div>
-                </div>
-                {index < WIZARD_STEPS.length - 1 && (
-                  <div
-                    className={`
-                      flex-1 h-1 mx-2 rounded-full transition-all duration-300
-                      ${currentStep > step.id ? 'bg-gradient-to-r from-solar-500 to-solar-600' : 'bg-neutral-700'}
-                    `}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-          <Progress value={progressPercentage} className="h-2 bg-neutral-700" />
-        </div>
+        {/* Enhanced Responsive Progress Indicator */}
+        <WizardProgress 
+          steps={WIZARD_STEPS}
+          currentStep={currentStep}
+          className="mb-8"
+        />
 
         {/* Wizard Content */}
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Card className="bg-neutral-800/50 border-neutral-700 shadow-xl">
-              <CardHeader>
+            <Card className="bg-neutral-800/50 border-neutral-700 rounded-xl shadow-lg min-h-[500px]">
+              <CardHeader className="p-6 md:p-8 pb-4">
                 <CardTitle className="text-white">{WIZARD_STEPS[currentStep - 1].title}</CardTitle>
                 <CardDescription className="text-neutral-400">
                   {WIZARD_STEPS[currentStep - 1].description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6 md:p-8 pt-0">
                 {/* Step Content */}
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -264,7 +251,7 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="min-h-[400px]"
                   >
                     {currentStep === 1 && <Step1ContractorInfo />}
@@ -279,13 +266,14 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
               </CardContent>
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between p-6 pt-0 border-t border-neutral-700">
+              <div className="flex items-center justify-between p-6 md:p-8 pt-6 border-t border-neutral-700">
                 <Button
                   type="button"
                   variant="outline"
+                  size="default"
                   onClick={handlePrevious}
                   disabled={currentStep === 1}
-                  className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white"
+                  className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white hover:border-neutral-500 disabled:border-neutral-700 disabled:text-neutral-500 disabled:hover:bg-transparent disabled:hover:text-neutral-500"
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   Anterior
@@ -294,8 +282,13 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                 {currentStep < WIZARD_STEPS.length ? (
                   <Button 
                     type="button" 
+                    variant="primary"
+                    size="default"
                     onClick={handleNext}
-                    className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700"
+                    loading={isValidating}
+                    loadingText="Validando..."
+                    disabled={hasCurrentStepErrors()}
+                    className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none"
                   >
                     Próximo
                     <ChevronRight className="w-4 h-4 ml-2" />
@@ -303,10 +296,14 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                 ) : (
                   <Button 
                     type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700"
+                    variant="secondary"
+                    size="default"
+                    loading={isSubmitting}
+                    loadingText="Criando..."
+                    disabled={isSubmitting || hasCurrentStepErrors()}
+                    className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none"
                   >
-                    {isSubmitting ? 'Criando...' : 'Criar Contrato'}
+                    Criar Contrato
                   </Button>
                 )}
               </div>
@@ -330,7 +327,7 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
             />
           </motion.div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

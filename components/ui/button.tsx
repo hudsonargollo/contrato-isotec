@@ -93,15 +93,18 @@ export function Button({
   loading = false,
   loadingText,
   disabled,
-  ...props
+  ...restProps
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  
+  // Explicitly exclude loading and loadingText from DOM props
+  const { loading: _, loadingText: __, ...domProps } = restProps as any;
   
   return (
     <button
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={isDisabled}
-      {...props}
+      {...domProps}
     >
       {loading && (
         <Loader2 

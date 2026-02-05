@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Filter, Eye, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { AdminLayout } from '@/components/ui/admin-layout';
 
 interface Contract {
   id: number;
@@ -103,35 +103,9 @@ export default function ContractsListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
-      {/* Header */}
-      <header className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/isotec-logo.webp"
-              alt="ISOTEC Logo"
-              width={120}
-              height={48}
-              priority
-              className="w-32"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-white">Contratos</h1>
-              <p className="text-sm text-neutral-400">Gerenciar todos os contratos</p>
-            </div>
-          </div>
-          <Link
-            href="/admin"
-            className="text-neutral-400 hover:text-white transition-colors"
-          >
-            Voltar ao Dashboard
-          </Link>
-        </div>
-      </header>
-
+    <AdminLayout userInfo={{ name: 'Administrador', role: 'Admin' }}>
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Search and Filters */}
         <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-xl p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -258,7 +232,7 @@ export default function ContractsListPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
