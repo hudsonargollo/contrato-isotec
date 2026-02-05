@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Filter, Eye, FileText } from 'lucide-react';
@@ -19,17 +19,57 @@ interface Contract {
 }
 
 export default function ContractsListPage() {
-  // @ts-ignore - TODO: Implement contract fetching
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  const fetchContracts = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+        // Determine if search query looks like CPF or name
+        const isNumeric = /^\d+/.test(searchQuery.trim());
+        params.append('searchField', isNumeric ? 'cpf' : 'name');
+      }
+
+      const response = await fetch(`/api/contracts?${params.toString()}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch contracts');
+      }
+
+      const data = await response.json();
+      setContracts(data.contracts || []);
+    } catch (err) {
+      console.error('Error fetching contracts:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, searchQuery]);
+
   useEffect(() => {
-    // TODO: Fetch contracts from API
-    // For now, show empty state
-    setLoading(false);
-  }, []);
+    fetchContracts();
+  }, [fetchContracts]);
+
+  // Debounce search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery !== '') {
+        fetchContracts();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, fetchContracts]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
