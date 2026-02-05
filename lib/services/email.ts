@@ -205,7 +205,7 @@ export async function sendVerificationEmail(
  * @returns Success status
  */
 /**
- * Send contract signed notification
+ * Send contract signed notification with PDF attachment
  * 
  * @param to Recipient email address
  * @param contractUuid Contract UUID for viewing
@@ -220,6 +220,7 @@ export async function sendContractSignedNotification(
   try {
     const transporter = createTransporter();
     const contractUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/contracts/${contractUuid}`;
+    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/contracts/${contractUuid}/pdf`;
     
     // Development mode or SMTP not configured - log to console
     if (!transporter || process.env.NODE_ENV === 'development') {
@@ -227,10 +228,28 @@ export async function sendContractSignedNotification(
       console.log('To:', to);
       console.log('Contractor:', contractorName);
       console.log('Contract URL:', contractUrl);
-      console.log('Template: HTML confirmation email');
+      console.log('PDF URL:', pdfUrl);
+      console.log('Template: HTML confirmation email with PDF attachment');
       console.log('=============================\n');
       
       return { success: true };
+    }
+
+    // Fetch PDF content for attachment
+    let pdfAttachment = null;
+    try {
+      const pdfResponse = await fetch(pdfUrl);
+      if (pdfResponse.ok) {
+        const pdfBuffer = await pdfResponse.arrayBuffer();
+        pdfAttachment = {
+          filename: `contrato-${contractUuid}.pdf`,
+          content: Buffer.from(pdfBuffer),
+          contentType: 'application/pdf'
+        };
+      }
+    } catch (pdfError) {
+      console.error('Error fetching PDF for email attachment:', pdfError);
+      // Continue without PDF attachment
     }
 
     // Production mode - send actual email via SMTP
@@ -253,15 +272,21 @@ export async function sendContractSignedNotification(
     <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
       <p style="margin: 0 0 15px 0;">Você pode visualizar seu contrato a qualquer momento:</p>
       <a href="${contractUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-        Ver Contrato
+        Ver Contrato Online
       </a>
     </div>
+    
+    ${pdfAttachment ? `
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0;"><strong>📎 Anexo:</strong> O contrato completo em PDF está anexado a este email para sua conveniência.</p>
+    </div>
+    ` : ''}
     
     <p><strong>Próximos passos:</strong></p>
     <ol>
       <li>Nossa equipe entrará em contato para agendar a instalação</li>
       <li>Você receberá atualizações sobre o progresso do projeto</li>
-      <li>Mantenha este email para referência futura</li>
+      <li>Mantenha este email e o PDF anexo para referência futura</li>
     </ol>
     
     <p style="margin-top: 30px;">Obrigado por escolher a ISOTEC!</p>
@@ -274,20 +299,25 @@ export async function sendContractSignedNotification(
 </html>
     `.trim();
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: {
         name: process.env.SMTP_FROM_NAME || 'ISOTEC',
         address: process.env.SMTP_FROM || 'noreply@isotec.com.br',
       },
       to,
-      subject: 'Contrato Assinado - ISOTEC',
+      subject: 'Contrato Assinado - ISOTEC (PDF Anexo)',
       html,
-      text: `Olá, ${contractorName}!\n\nSeu contrato foi assinado com sucesso!\n\nVisualize em: ${contractUrl}`,
+      text: `Olá, ${contractorName}!\n\nSeu contrato foi assinado com sucesso!\n\nVisualize em: ${contractUrl}\n\n${pdfAttachment ? 'O contrato em PDF está anexado a este email.' : ''}`,
     };
+
+    // Add PDF attachment if available
+    if (pdfAttachment) {
+      mailOptions.attachments = [pdfAttachment];
+    }
 
     await transporter.sendMail(mailOptions);
     
-    console.log(`Contract signed notification sent to ${to}`);
+    console.log(`Contract signed notification sent to ${to}${pdfAttachment ? ' with PDF attachment' : ''}`);
     return { success: true };
     
   } catch (error) {
