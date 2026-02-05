@@ -41,6 +41,18 @@ export default function WizardPage() {
       // Filter out services that are not included
       const filteredServices = contract.services.filter(s => s.included);
       
+      // Validate we have at least one service
+      if (filteredServices.length === 0) {
+        alert('Error: At least one service must be selected');
+        return;
+      }
+
+      // Validate we have at least one item
+      if (!contract.items || contract.items.length === 0) {
+        alert('Error: At least one equipment item is required');
+        return;
+      }
+      
       // Prepare the contract data
       const contractData = {
         ...contract,
@@ -51,7 +63,7 @@ export default function WizardPage() {
           : undefined,
       };
 
-      console.log('Submitting contract data:', contractData);
+      console.log('Submitting contract data:', JSON.stringify(contractData, null, 2));
 
       // Call the API to create the contract
       const response = await fetch('/api/contracts', {
@@ -82,8 +94,11 @@ export default function WizardPage() {
 
       // Check if response was successful
       if (!response.ok) {
+        // Show detailed error information
+        console.error('API Error:', result);
         const errorMessage = result?.error || result?.details || 'Failed to create contract';
-        throw new Error(errorMessage);
+        const errorDetails = result?.details ? JSON.stringify(result.details, null, 2) : '';
+        throw new Error(`${errorMessage}\n${errorDetails}`);
       }
       
       // Redirect to the public contract view
