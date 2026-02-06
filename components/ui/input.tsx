@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const inputVariants = cva(
   // Base styles with enhanced focus states and transitions
-  'flex w-full rounded-lg border-2 bg-white px-4 py-3 text-base transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400',
+  'flex w-full rounded-lg border-2 bg-white px-4 py-3 text-base transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400 touch-manipulation',
   {
     variants: {
       variant: {
@@ -38,9 +38,9 @@ const inputVariants = cva(
         ],
       },
       size: {
-        sm: 'h-9 px-3 py-2 text-sm',
-        default: 'h-11 px-4 py-3 text-base',
-        lg: 'h-12 px-5 py-3 text-lg',
+        sm: 'min-h-[44px] h-11 px-3 py-2 text-base', // Minimum touch target, base text size to prevent zoom
+        default: 'min-h-[48px] h-12 px-4 py-3 text-base', // Recommended touch target
+        lg: 'min-h-[52px] h-13 px-5 py-3 text-lg', // Large touch target
       },
     },
     defaultVariants: {

@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCPF, validateCPF } from '@/lib/validation/cpf';
 
+// Client component for data export
+
 export default function DataExportPage() {
   const [cpf, setCpf] = useState('');
   const [loading, setLoading] = useState(false);

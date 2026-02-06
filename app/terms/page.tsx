@@ -6,14 +6,20 @@
  * Requirements: 11.6
  */
 
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Termos de Uso | ISOTEC',
-  description: 'Termos e condições de uso do sistema de contratos ISOTEC',
-};
+import { useEffect, useState } from 'react';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default function TermsPage() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString('pt-BR'));
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-sm rounded-lg p-8">
@@ -140,7 +146,7 @@ export default function TermsPage() {
               <li>Uso indevido do sistema por terceiros</li>
             </ul>
             <p className="text-gray-700 mt-2">
-              O sistema é fornecido "como está", sem garantias expressas ou implícitas.
+              O sistema é fornecido como está, sem garantias expressas ou implícitas.
             </p>
           </section>
 
@@ -206,7 +212,7 @@ export default function TermsPage() {
 
           <section className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-gray-600 text-sm">
-              <strong>Última atualização:</strong> {new Date().toLocaleDateString('pt-BR')}
+              <strong>Última atualização:</strong> {currentDate}
             </p>
             <p className="text-gray-600 text-sm mt-2">
               <strong>Versão:</strong> 1.0

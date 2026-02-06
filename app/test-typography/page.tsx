@@ -187,34 +187,115 @@ export default function TestTypographyPage() {
           </div>
         </section>
 
-        {/* Prose Content */}
+        {/* Readability Improvements Section */}
         <section className="space-y-4">
           <h2 className="text-3xl font-semibold text-ocean-700 border-b border-neutral-200 pb-2">
-            Prose Content
+            Readability Improvements
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* Optimal Line Length */}
+            <div className="p-6 bg-neutral-50 rounded-lg">
+              <h3 className="text-xl font-medium mb-4 text-neutral-900">
+                Optimal Line Length (75ch)
+              </h3>
+              <div className="prose">
+                <p className="text-base leading-relaxed text-neutral-700">
+                  This paragraph demonstrates optimal line length for readability. Research shows that 
+                  lines between 45-75 characters are easiest to read. This text is constrained to 
+                  75 characters maximum width, which provides comfortable reading without requiring 
+                  excessive eye movement. The line height is set to 1.7 for improved readability 
+                  and better text flow.
+                </p>
+              </div>
+            </div>
+            
+            {/* Enhanced Paragraph Spacing */}
+            <div className="p-6 bg-neutral-50 rounded-lg">
+              <h3 className="text-xl font-medium mb-4 text-neutral-900">
+                Enhanced Paragraph Spacing
+              </h3>
+              <div className="space-y-5">
+                <p className="text-base leading-relaxed text-neutral-700 max-w-[75ch]">
+                  This section demonstrates improved paragraph spacing. Each paragraph has 
+                  increased bottom margin for better visual separation and easier scanning.
+                </p>
+                <p className="text-base leading-relaxed text-neutral-700 max-w-[75ch]">
+                  The spacing between paragraphs helps readers distinguish between different 
+                  ideas and improves the overall reading experience. This is especially 
+                  important for longer content.
+                </p>
+              </div>
+            </div>
+            
+            {/* Mobile-Optimized Text */}
+            <div className="p-6 bg-gradient-to-br from-solar-50 to-ocean-50 rounded-lg">
+              <h3 className="text-xl font-medium mb-4 text-neutral-900">
+                Mobile-Optimized Typography
+              </h3>
+              <p className="text-base md:text-lg leading-normal md:leading-relaxed text-neutral-700 max-w-[75ch]">
+                This text adjusts for mobile devices with appropriate font sizes and line heights. 
+                On mobile, the minimum font size is 16px to prevent zoom, and line height is 
+                optimized for smaller screens while maintaining readability.
+              </p>
+            </div>
+            
+            {/* Contrast Ratios */}
+            <div className="p-6 bg-white border border-neutral-200 rounded-lg">
+              <h3 className="text-xl font-medium mb-4 text-neutral-900">
+                Contrast Ratios (WCAG AA)
+              </h3>
+              <div className="space-y-3">
+                <p className="text-neutral-900 text-base">
+                  High contrast text (16.75:1 ratio) - Excellent readability
+                </p>
+                <p className="text-neutral-700 text-base">
+                  Medium contrast text (7.8:1 ratio) - AAA compliant
+                </p>
+                <p className="text-neutral-600 text-base">
+                  Lower contrast text (4.6:1 ratio) - AA compliant
+                </p>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+
+        {/* Enhanced Prose Content */}
+        <section className="space-y-4">
+          <h2 className="text-3xl font-semibold text-ocean-700 border-b border-neutral-200 pb-2">
+            Enhanced Prose Content
           </h2>
           <div className="prose max-w-none">
             <h3>Optimized Reading Experience</h3>
             <p>
-              This section demonstrates the prose styling for optimal reading experience. 
-              The line length is constrained to improve readability, and proper spacing 
-              is applied between elements.
+              This section demonstrates the enhanced prose styling for optimal reading experience. 
+              The line length is constrained to 75 characters maximum to improve readability, 
+              and proper spacing is applied between elements for better visual hierarchy.
             </p>
             <p>
               Inter font provides excellent legibility at all sizes, making it perfect 
               for both headings and body text. The font features proper letter spacing 
-              and character shapes that work well on screens.
+              and character shapes that work exceptionally well on screens. The enhanced 
+              line height of 1.7 provides comfortable reading flow.
             </p>
-            <h4>Key Benefits</h4>
+            <h4>Key Readability Improvements</h4>
             <ul>
-              <li>Excellent readability across all devices</li>
-              <li>Professional and modern appearance</li>
-              <li>Optimized for digital interfaces</li>
-              <li>Wide language support</li>
+              <li>Optimal line length (75 characters maximum)</li>
+              <li>Enhanced line height (1.7) for better text flow</li>
+              <li>Increased paragraph spacing for visual separation</li>
+              <li>Mobile-optimized font sizes (minimum 16px)</li>
+              <li>WCAG AA compliant contrast ratios</li>
+              <li>Professional typography hierarchy</li>
             </ul>
+            <h4>Mobile Optimizations</h4>
+            <p>
+              On mobile devices, the typography system automatically adjusts font sizes 
+              and line heights for optimal readability. The minimum font size is 16px 
+              to prevent browser zoom, and spacing is optimized for touch interfaces.
+            </p>
           </div>
         </section>
-
-        {/* Color Combinations */}
         <section className="space-y-4">
           <h2 className="text-3xl font-semibold text-ocean-700 border-b border-neutral-200 pb-2">
             Typography with ISOTEC Colors

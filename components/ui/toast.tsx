@@ -1,24 +1,28 @@
 /**
- * Toast Notification Component
- * A toast notification system for displaying temporary messages
+ * Enhanced Toast Notification System
+ * 
+ * A comprehensive toast notification system with auto-dismiss functionality,
+ * multiple variants, proper positioning, and smooth animations.
+ * 
  * Validates: Requirements 9.4
  */
 
 import * as React from 'react';
 import { cva } from 'class-variance-authority';
-import { X, CheckCircle2, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, AlertTriangle, Info, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const toastVariants = cva(
-  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full',
+  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-8 shadow-lg transition-all backdrop-blur-sm',
   {
     variants: {
       variant: {
-        default: 'border bg-white text-neutral-900',
-        success: 'border-energy-200 bg-energy-50 text-energy-900',
-        error: 'border-red-200 bg-red-50 text-red-900',
-        warning: 'border-solar-200 bg-solar-50 text-solar-900',
-        info: 'border-ocean-200 bg-ocean-50 text-ocean-900',
+        default: 'border-neutral-200 bg-white/95 text-neutral-900 shadow-md',
+        success: 'border-energy-200 bg-energy-50/95 text-energy-900 shadow-energy-500/20',
+        error: 'border-red-200 bg-red-50/95 text-red-900 shadow-red-500/20',
+        warning: 'border-solar-200 bg-solar-50/95 text-solar-900 shadow-solar-500/20',
+        info: 'border-ocean-200 bg-ocean-50/95 text-ocean-900 shadow-ocean-500/20',
       },
     },
     defaultVariants: {
@@ -31,10 +35,12 @@ const ToastContext = React.createContext<{
   toasts: Toast[];
   addToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
+  clearAllToasts: () => void;
 }>({
   toasts: [],
   addToast: () => {},
   removeToast: () => {},
+  clearAllToasts: () => {},
 });
 
 interface Toast {
@@ -43,10 +49,13 @@ interface Toast {
   description?: string;
   variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
   duration?: number;
+  persistent?: boolean; // Don't auto-dismiss
   action?: {
     label: string;
     onClick: () => void;
   };
+  icon?: LucideIcon;
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -54,16 +63,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9);
-    const newToast = { ...toast, id };
+    const newToast = { 
+      ...toast, 
+      id,
+      position: toast.position || 'top-right',
+      duration: toast.duration ?? (toast.persistent ? 0 : 5000)
+    };
     
     setToasts((prev) => [...prev, newToast]);
 
-    // Auto-remove toast after duration
-    const duration = toast.duration ?? 5000;
-    if (duration > 0) {
+    // Auto-remove toast after duration (unless persistent)
+    if (!toast.persistent && newToast.duration > 0) {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, duration);
+      }, newToast.duration);
     }
   }, []);
 
@@ -71,8 +84,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const clearAllToasts = React.useCallback(() => {
+    setToasts([]);
+  }, []);
+
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider value={{ toasts, addToast, removeToast, clearAllToasts }}>
       {children}
       <ToastViewport />
     </ToastContext.Provider>
@@ -84,12 +101,82 @@ function ToastViewport() {
 
   if (toasts.length === 0) return null;
 
+  // Group toasts by position
+  const toastsByPosition = toasts.reduce((acc, toast) => {
+    const position = toast.position || 'top-right';
+    if (!acc[position]) acc[position] = [];
+    acc[position].push(toast);
+    return acc;
+  }, {} as Record<string, Toast[]>);
+
+  const getPositionClasses = (position: string) => {
+    switch (position) {
+      case 'top-left':
+        return 'fixed top-0 left-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col p-4';
+      case 'top-right':
+        return 'fixed top-0 right-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col p-4';
+      case 'top-center':
+        return 'fixed top-0 left-1/2 -translate-x-1/2 z-[100] flex max-h-screen w-full max-w-[420px] flex-col p-4';
+      case 'bottom-left':
+        return 'fixed bottom-0 left-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col-reverse p-4';
+      case 'bottom-right':
+        return 'fixed bottom-0 right-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col-reverse p-4';
+      case 'bottom-center':
+        return 'fixed bottom-0 left-1/2 -translate-x-1/2 z-[100] flex max-h-screen w-full max-w-[420px] flex-col-reverse p-4';
+      default:
+        return 'fixed top-0 right-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col p-4';
+    }
+  };
+
+  const getAnimationDirection = (position: string) => {
+    if (position.includes('left')) return { x: -100 };
+    if (position.includes('right')) return { x: 100 };
+    if (position.includes('top')) return { y: -100 };
+    if (position.includes('bottom')) return { y: 100 };
+    return { x: 100 };
+  };
+
   return (
-    <div className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]">
-      {toasts.map((toast) => (
-        <ToastComponent key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+    <>
+      {Object.entries(toastsByPosition).map(([position, positionToasts]) => (
+        <div key={position} className={getPositionClasses(position)}>
+          <AnimatePresence mode="popLayout">
+            {positionToasts.map((toast) => (
+              <motion.div
+                key={toast.id}
+                initial={{ 
+                  opacity: 0, 
+                  scale: 0.95,
+                  ...getAnimationDirection(position)
+                }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  x: 0,
+                  y: 0
+                }}
+                exit={{ 
+                  opacity: 0, 
+                  scale: 0.95,
+                  ...getAnimationDirection(position)
+                }}
+                transition={{ 
+                  duration: 0.2,
+                  ease: 'easeOut'
+                }}
+                layout
+                className="mb-2 w-full"
+              >
+                <ToastComponent 
+                  toast={toast} 
+                  onClose={() => removeToast(toast.id)} 
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       ))}
-    </div>
+    </>
   );
 }
 
@@ -99,7 +186,42 @@ interface ToastComponentProps {
 }
 
 function ToastComponent({ toast, onClose }: ToastComponentProps) {
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [progress, setProgress] = React.useState(100);
+  const progressRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-dismiss progress bar
+  React.useEffect(() => {
+    if (toast.persistent || toast.duration === 0) return;
+
+    const startTime = Date.now();
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 100 - (elapsed / toast.duration!) * 100);
+      setProgress(remaining);
+
+      if (remaining > 0 && !isHovered) {
+        progressRef.current = setTimeout(updateProgress, 50);
+      }
+    };
+
+    if (!isHovered) {
+      updateProgress();
+    }
+
+    return () => {
+      if (progressRef.current) {
+        clearTimeout(progressRef.current);
+      }
+    };
+  }, [toast.duration, toast.persistent, isHovered]);
+
   const getIcon = () => {
+    if (toast.icon) {
+      const CustomIcon = toast.icon;
+      return <CustomIcon className="h-5 w-5" />;
+    }
+
     switch (toast.variant) {
       case 'success':
         return <CheckCircle2 className="h-5 w-5 text-energy-600" />;
@@ -115,13 +237,27 @@ function ToastComponent({ toast, onClose }: ToastComponentProps) {
   };
 
   return (
-    <div className={cn(toastVariants({ variant: toast.variant }))}>
+    <div 
+      className={cn(toastVariants({ variant: toast.variant }))}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Progress bar for auto-dismiss */}
+      {!toast.persistent && toast.duration! > 0 && (
+        <div className="absolute bottom-0 left-0 h-1 bg-black/10 w-full">
+          <div 
+            className="h-full bg-current opacity-30 transition-all duration-75 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+
       <div className="flex items-start space-x-3">
         {getIcon()}
         <div className="flex-1 space-y-1">
-          <div className="text-sm font-semibold">{toast.title}</div>
+          <div className="text-sm font-semibold leading-tight">{toast.title}</div>
           {toast.description && (
-            <div className="text-sm opacity-90">{toast.description}</div>
+            <div className="text-sm opacity-90 leading-tight">{toast.description}</div>
           )}
         </div>
       </div>
@@ -129,7 +265,7 @@ function ToastComponent({ toast, onClose }: ToastComponentProps) {
       {toast.action && (
         <button
           onClick={toast.action.onClick}
-          className="text-sm font-medium underline hover:no-underline"
+          className="text-sm font-medium underline hover:no-underline transition-colors ml-3"
         >
           {toast.action.label}
         </button>
@@ -137,7 +273,8 @@ function ToastComponent({ toast, onClose }: ToastComponentProps) {
       
       <button
         onClick={onClose}
-        className="absolute right-2 top-2 rounded-md p-1 text-neutral-400 opacity-0 transition-opacity hover:text-neutral-900 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100"
+        className="absolute right-2 top-2 rounded-md p-1 text-current opacity-50 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-current focus:ring-offset-2"
+        aria-label="Fechar notificação"
       >
         <X className="h-4 w-4" />
       </button>
@@ -150,8 +287,81 @@ export function useToast() {
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');
   }
-  return context;
+  
+  // Helper methods for common toast types
+  const toast = React.useMemo(() => ({
+    success: (title: string, description?: string, options?: Partial<Toast>) => 
+      context.addToast({ variant: 'success', title, description, ...options }),
+    
+    error: (title: string, description?: string, options?: Partial<Toast>) => 
+      context.addToast({ variant: 'error', title, description, ...options }),
+    
+    warning: (title: string, description?: string, options?: Partial<Toast>) => 
+      context.addToast({ variant: 'warning', title, description, ...options }),
+    
+    info: (title: string, description?: string, options?: Partial<Toast>) => 
+      context.addToast({ variant: 'info', title, description, ...options }),
+    
+    default: (title: string, description?: string, options?: Partial<Toast>) => 
+      context.addToast({ variant: 'default', title, description, ...options }),
+    
+    custom: (toast: Omit<Toast, 'id'>) => context.addToast(toast),
+    
+    dismiss: context.removeToast,
+    dismissAll: context.clearAllToasts,
+  }), [context]);
+
+  return toast;
 }
+
+// Predefined toast helpers for common scenarios
+export const showSuccessToast = (title: string, description?: string) => ({
+  variant: 'success' as const,
+  title,
+  description,
+  duration: 4000,
+});
+
+export const showErrorToast = (title: string, description?: string, persistent = false) => ({
+  variant: 'error' as const,
+  title,
+  description,
+  persistent,
+  duration: persistent ? 0 : 6000,
+});
+
+export const showWarningToast = (title: string, description?: string) => ({
+  variant: 'warning' as const,
+  title,
+  description,
+  duration: 5000,
+});
+
+export const showInfoToast = (title: string, description?: string) => ({
+  variant: 'info' as const,
+  title,
+  description,
+  duration: 4000,
+});
+
+export const showNetworkErrorToast = (onRetry?: () => void) => ({
+  variant: 'error' as const,
+  title: 'Erro de Conexão',
+  description: 'Não foi possível conectar ao servidor. Verifique sua conexão.',
+  persistent: true,
+  action: onRetry ? {
+    label: 'Tentar Novamente',
+    onClick: onRetry,
+  } : undefined,
+});
+
+export const showOfflineToast = () => ({
+  variant: 'warning' as const,
+  title: 'Você está offline',
+  description: 'Algumas funcionalidades podem não estar disponíveis.',
+  persistent: true,
+  position: 'bottom-center' as const,
+});
 
 export type { Toast };
 export { ToastProvider as ToastRoot };

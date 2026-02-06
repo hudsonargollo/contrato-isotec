@@ -11,9 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { renderToBuffer } from '@react-pdf/renderer';
-import { ContractPDF } from '@/lib/pdf/ContractPDF';
-import React from 'react';
+import { generateContractPDF } from '@/lib/pdf/dynamic-pdf';
 
 /**
  * GET /api/contracts/[id]/pdf
@@ -100,61 +98,53 @@ export async function GET(
     // Transform database data to ContractPDF format
     const contractData = {
       // Contractor Information
-      contractorName: contract.contractor_name,
-      contractorCPF: contract.contractor_cpf,
-      contractorEmail: contract.contractor_email || undefined,
-      contractorPhone: contract.contractor_phone || undefined,
+      contractor_name: contract.contractor_name,
+      contractor_email: contract.contractor_email || '',
+      contractor_phone: contract.contractor_phone || '',
+      contractor_cpf: contract.contractor_cpf,
+      contractor_rg: contract.contractor_rg || '',
 
       // Installation Address
-      addressCEP: contract.address_cep,
-      addressStreet: contract.address_street,
-      addressNumber: contract.address_number,
-      addressComplement: contract.address_complement || undefined,
-      addressNeighborhood: contract.address_neighborhood,
-      addressCity: contract.address_city,
-      addressState: contract.address_state,
-
-      // Geographic Location (optional)
-      locationLatitude: contract.location_latitude || undefined,
-      locationLongitude: contract.location_longitude || undefined,
-
-      // Project Specifications
-      projectKWp: parseFloat(contract.project_kwp),
-      installationDate: contract.installation_date ? new Date(contract.installation_date) : undefined,
+      installation_address: `${contract.address_street}, ${contract.address_number}${contract.address_complement ? ', ' + contract.address_complement : ''}`,
+      installation_city: contract.address_city,
+      installation_state: contract.address_state,
+      installation_cep: contract.address_cep,
+      installation_coordinates: contract.location_latitude && contract.location_longitude 
+        ? `${contract.location_latitude}, ${contract.location_longitude}` 
+        : undefined,
 
       // Equipment Items
-      items: (contract.contract_items || [])
+      equipment_items: (contract.contract_items || [])
         .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order)
-        .map((item: { item_name: string; quantity: number; unit: string }) => ({
-          itemName: item.item_name,
+        .map((item: { item_name: string; quantity: number; unit: string; unit_price?: number }) => ({
+          name: item.item_name,
           quantity: item.quantity,
-          unit: item.unit
+          unit: item.unit,
+          unit_price: item.unit_price || 0,
+          total_price: (item.unit_price || 0) * item.quantity
         })),
 
-      // Services
-      services: Array.isArray(contract.services) ? contract.services : [],
+      // Service Items
+      service_items: Array.isArray(contract.services) ? contract.services.map((service: any) => ({
+        name: service.name || service,
+        description: service.description || '',
+        included: true
+      })) : [],
 
       // Financial Information
-      contractValue: parseFloat(contract.contract_value),
-      paymentMethod: contract.payment_method as 'pix' | 'cash' | 'credit',
-
-      // Metadata
-      createdAt: new Date(contract.created_at),
+      total_equipment_value: parseFloat(contract.contract_value) || 0,
+      total_service_value: 0,
+      total_contract_value: parseFloat(contract.contract_value) || 0,
 
       // Signature Information (if contract is signed)
-      signatureData: auditLogs && auditLogs.length > 0 ? {
-        contractHash: auditLogs[0].contract_hash,
-        signedAt: new Date(auditLogs[0].created_at),
-        signatureMethod: auditLogs[0].signature_method as 'govbr' | 'email',
-        signerIdentifier: auditLogs[0].signer_identifier || undefined
-      } : undefined
+      signature_email: auditLogs && auditLogs.length > 0 ? auditLogs[0].signer_identifier : undefined,
+      signature_timestamp: auditLogs && auditLogs.length > 0 ? auditLogs[0].created_at : undefined,
+      signature_ip: undefined,
+      signature_user_agent: undefined
     };
 
-    // Generate PDF buffer
-    const pdfElement = React.createElement(ContractPDF, { data: contractData });
-    // Type assertion needed because ContractPDF returns a Document component
-    // which is valid for renderToBuffer but TypeScript doesn't recognize the type compatibility
-    const pdfBuffer = await renderToBuffer(pdfElement as any);
+    // Generate PDF buffer using dynamic import
+    const pdfBuffer = await generateContractPDF(contractData);
 
     // Generate filename with contractor name and date
     const sanitizedName = contract.contractor_name

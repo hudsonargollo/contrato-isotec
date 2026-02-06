@@ -43,7 +43,7 @@ export function EmailSignature({
   const [lastSentAt, setLastSentAt] = useState<Date | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
-  const { addToast } = useToast();
+  const toast = useToast();
 
   // Network connectivity detection
   useEffect(() => {
@@ -51,21 +51,16 @@ export function EmailSignature({
       setIsOnline(true);
       if (!navigator.onLine) return; // Double check
       
-      addToast({
-        title: 'Conexão Restaurada',
-        description: 'Você está online novamente.',
-        variant: 'success',
-        duration: 3000,
-      });
+      toast.success('Conexão Restaurada', 'Você está online novamente.');
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      addToast({
+      toast.custom({
         title: 'Sem Conexão',
         description: 'Verifique sua conexão com a internet.',
         variant: 'warning',
-        duration: 0, // Don't auto-dismiss
+        persistent: true,
         action: {
           label: 'Tentar Novamente',
           onClick: () => window.location.reload(),
@@ -83,7 +78,7 @@ export function EmailSignature({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [addToast]);
+  }, [toast]);
 
   const getErrorFromResponse = (response: Response, data: any): ErrorState => {
     switch (response.status) {
@@ -206,18 +201,12 @@ export function EmailSignature({
         
         // Show toast for certain error types
         if (errorState.type === 'rate_limit') {
-          addToast({
-            title: 'Limite Excedido',
-            description: errorState.message,
-            variant: 'warning',
-            duration: 8000,
-          });
+          toast.warning('Limite Excedido', errorState.message);
         } else if (errorState.type === 'server') {
-          addToast({
+          toast.custom({
             title: 'Erro no Servidor',
             description: 'Nossos servidores estão temporariamente indisponíveis.',
             variant: 'error',
-            duration: 6000,
             action: {
               label: 'Tentar Novamente',
               onClick: () => {
@@ -236,12 +225,7 @@ export function EmailSignature({
       setRetryCount(0); // Reset retry count on success
       
       // Success toast
-      addToast({
-        title: 'Código Enviado',
-        description: `Código de verificação enviado para ${email}`,
-        variant: 'success',
-        duration: 4000,
-      });
+      toast.success('Código Enviado', `Código de verificação enviado para ${email}`);
       
       // In development, show the code
       if (data.code && typeof window !== 'undefined') {
@@ -266,13 +250,12 @@ export function EmailSignature({
       setRetryCount(prev => prev + 1);
       
       // Show toast for network errors with retry suggestion
-      addToast({
+      toast.custom({
         title: 'Erro de Conexão',
         description: retryCount > 2 
           ? 'Múltiplas tentativas falharam. Verifique sua conexão.'
           : 'Falha na conexão. Tentando novamente...',
         variant: 'error',
-        duration: 6000,
         action: {
           label: 'Tentar Novamente',
           onClick: () => {
@@ -342,11 +325,10 @@ export function EmailSignature({
         
         // Show toast for specific error types
         if (errorState.type === 'expired') {
-          addToast({
+          toast.custom({
             title: 'Código Expirado',
             description: 'Solicite um novo código para continuar.',
             variant: 'warning',
-            duration: 6000,
             action: {
               label: 'Reenviar Código',
               onClick: () => {
@@ -356,12 +338,7 @@ export function EmailSignature({
             },
           });
         } else if (errorState.type === 'invalid_code') {
-          addToast({
-            title: 'Código Inválido',
-            description: 'Verifique os 6 dígitos e tente novamente.',
-            variant: 'error',
-            duration: 5000,
-          });
+          toast.error('Código Inválido', 'Verifique os 6 dígitos e tente novamente.');
         }
         return;
       }
@@ -370,12 +347,7 @@ export function EmailSignature({
       setRetryCount(0); // Reset retry count on success
       
       // Success toast
-      addToast({
-        title: 'Assinatura Confirmada!',
-        description: 'Contrato assinado com sucesso.',
-        variant: 'success',
-        duration: 4000,
-      });
+      toast.success('Assinatura Confirmada!', 'Contrato assinado com sucesso.');
       
       // Call callback after a short delay to show success message
       setTimeout(() => {
@@ -398,11 +370,10 @@ export function EmailSignature({
       setRetryCount(prev => prev + 1);
       
       // Show toast for network errors
-      addToast({
+      toast.custom({
         title: 'Erro de Conexão',
         description: 'Falha ao verificar o código. Tente novamente.',
         variant: 'error',
-        duration: 6000,
         action: {
           label: 'Tentar Novamente',
           onClick: () => {
@@ -429,24 +400,14 @@ export function EmailSignature({
       
       setError(rateLimitError);
       
-      addToast({
-        title: 'Aguarde um Momento',
-        description: `Você pode solicitar um novo código em ${remainingSeconds} segundos.`,
-        variant: 'warning',
-        duration: 4000,
-      });
+      toast.warning('Aguarde um Momento', `Você pode solicitar um novo código em ${remainingSeconds} segundos.`);
       return;
     }
 
     setCode('');
     setError(null);
     
-    addToast({
-      title: 'Reenviando Código',
-      description: 'Solicitando um novo código de verificação...',
-      variant: 'info',
-      duration: 3000,
-    });
+    toast.info('Reenviando Código', 'Solicitando um novo código de verificação...');
     
     await handleSendCode();
   };

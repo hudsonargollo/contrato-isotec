@@ -12,35 +12,36 @@
   perspective: 1000px;
 }
 
-/* Smooth transitions for all interactive elements */
+/* Smooth transitions for all interactive elements - optimized */
 .transition-smooth {
-  transition-property: all;
+  transition-property: transform, opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
 
-/* Button press animation */
+/* Button press animation - optimized */
 .btn-press {
   transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .btn-press:active {
-  transform: scale(0.95);
+  transform: scale(0.95) translateZ(0);
 }
 
-/* Card hover lift effect */
+/* Card hover lift effect - optimized with transform only */
 .card-lift {
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .card-lift:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-4px) scale(1.02) translateZ(0);
 }
 
-/* Input focus glow effect */
+/* Input focus glow effect - optimized */
 .input-glow {
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-glow:focus {
@@ -65,7 +66,7 @@
     rgba(245, 245, 245, 0.2) 75%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  animation: skeleton-shimmer 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes skeleton-shimmer {
@@ -216,17 +217,34 @@
   }
 }
 
-/* Floating action button pulse */
+/* Floating action button pulse - optimized without box-shadow animation */
 .fab-pulse {
-  animation: fab-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  position: relative;
+  will-change: transform;
 }
 
-@keyframes fab-pulse {
+.fab-pulse::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: rgba(245, 158, 11, 0.3);
+  transform: scale(1) translateZ(0);
+  opacity: 0;
+  animation: fab-pulse-optimized 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fab-pulse-optimized {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    transform: scale(1) translateZ(0);
+    opacity: 0;
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+    transform: scale(1.5) translateZ(0);
+    opacity: 0.7;
   }
 }
 
@@ -250,7 +268,7 @@
 
 /* Icon bounce animation for interactive elements */
 .icon-bounce {
-  animation: icon-bounce 2s ease-in-out infinite;
+  animation: icon-bounce 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes icon-bounce {
@@ -379,7 +397,7 @@
   height: 6px;
   border-radius: 50%;
   background-color: rgb(245, 158, 11);
-  animation: loading-dots 1.4s ease-in-out infinite both;
+  animation: loading-dots 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite both;
 }
 
 .loading-dots span:nth-child(1) { animation-delay: -0.32s; }

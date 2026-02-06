@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Spacing and Animation Demo Page
  * 
@@ -13,8 +15,3 @@ export default function SpacingAnimationDemoPage() {
     </div>
   );
 }
-
-export const metadata = {
-  title: 'Spacing & Animation Demo - ISOTEC Design System',
-  description: 'Demonstration of the spacing scale and animation utilities for the ISOTEC design system.',
-};

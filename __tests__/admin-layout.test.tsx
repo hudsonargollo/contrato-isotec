@@ -139,8 +139,8 @@ describe('AdminLayout', () => {
     );
 
     // The Contratos link should have active styling
-    const contractsLink = screen.getByRole('link', { name: /contratos/i });
-    expect(contractsLink).toHaveClass('bg-solar-500/10', 'text-solar-400');
+    const contractsButton = screen.getByRole('button', { name: /contratos/i });
+    expect(contractsButton).toHaveClass('bg-solar-500/10', 'text-solar-400');
   });
 
   it('renders ISOTEC branding elements', () => {
@@ -151,7 +151,7 @@ describe('AdminLayout', () => {
     );
 
     // Check for ISOTEC logo
-    expect(screen.getByAltText('ISOTEC Logo')).toBeInTheDocument();
+    expect(screen.getByAltText('ISOTEC - Painel Administrativo')).toBeInTheDocument();
     
     // Check for admin label
     expect(screen.getByText('Admin')).toBeInTheDocument();
@@ -200,10 +200,10 @@ describe('AdminLayout', () => {
     );
 
     // Contratos should have expandable children
-    const contractsLink = screen.getByRole('link', { name: /contratos/i });
+    const contractsButton = screen.getByRole('button', { name: /contratos/i });
     
     // Click to expand (preventDefault should be called, so it won't navigate)
-    fireEvent.click(contractsLink);
+    fireEvent.click(contractsButton);
     
     // Should show sub-items
     expect(screen.getByText('Todos os Contratos')).toBeInTheDocument();

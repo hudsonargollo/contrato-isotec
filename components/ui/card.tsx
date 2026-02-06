@@ -16,6 +16,11 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: 'default' | 'interactive' | 'elevated' | 'outlined';
   hover?: boolean;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export function Card({ 
@@ -23,6 +28,11 @@ export function Card({
   children, 
   variant = 'default',
   hover = false,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  onClick,
+  onKeyDown,
   ...props 
 }: CardProps) {
   const baseClasses = [
@@ -44,6 +54,13 @@ export function Card({
       'hover:-translate-y-1',
       'active:scale-[0.98]',
       'active:translate-y-0',
+      'focus:outline-none',
+      'focus:ring-2',
+      'focus:ring-solar-500/50',
+      'focus:ring-offset-2',
+      'touch-manipulation',
+      'select-none',
+      'min-h-[48px]', // Minimum touch target height
     ],
     elevated: [
       'shadow-md',
@@ -63,6 +80,14 @@ export function Card({
     'hover:border-neutral-300',
   ] : [];
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (variant === 'interactive' && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick?.(e as any);
+    }
+    onKeyDown?.(e);
+  };
+
   return (
     <div
       className={cn(
@@ -71,6 +96,13 @@ export function Card({
         ...hoverClasses,
         className
       )}
+      role={variant === 'interactive' ? 'button' : undefined}
+      tabIndex={variant === 'interactive' ? 0 : undefined}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
       {...props}
     >
       {children}

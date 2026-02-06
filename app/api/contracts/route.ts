@@ -179,7 +179,9 @@ export async function GET(request: NextRequest) {
       searchQuery: searchParams.get('search') || undefined,
       searchField: searchParams.get('searchField') || undefined,
       page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '20')
+      limit: parseInt(searchParams.get('limit') || '10'),
+      sortBy: searchParams.get('sortBy') || 'created_at',
+      sortOrder: searchParams.get('sortOrder') || 'desc'
     };
 
     // Validate filters
@@ -217,10 +219,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Apply pagination
+    // Apply pagination and sorting
     const offset = (validFilters.page - 1) * validFilters.limit;
+    
+    // Validate sort field and apply sorting
+    const validSortFields = ['created_at', 'contractor_name', 'contract_value', 'status'];
+    const sortField = validSortFields.includes(validFilters.sortBy) ? validFilters.sortBy : 'created_at';
+    const ascending = validFilters.sortOrder === 'asc';
+    
     query = query
-      .order('created_at', { ascending: false })
+      .order(sortField, { ascending })
       .range(offset, offset + validFilters.limit - 1);
 
     // Execute query
@@ -239,10 +247,10 @@ export async function GET(request: NextRequest) {
       success: true,
       contracts: contracts || [],
       pagination: {
-        page: validFilters.page,
-        limit: validFilters.limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / validFilters.limit)
+        currentPage: validFilters.page,
+        totalPages: Math.ceil((count || 0) / validFilters.limit),
+        totalItems: count || 0,
+        itemsPerPage: validFilters.limit
       }
     });
 

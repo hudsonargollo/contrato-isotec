@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
       // Redirect to login if not authenticated
       const redirectUrl = new URL('/login', request.url);
@@ -58,9 +58,9 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
       // Redirect to unauthorized page if not admin
-      return NextResponse.redirect(new URL('/unauthorized', request.url));
+      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
     // Enforce MFA for admin users (Requirement 11.2)

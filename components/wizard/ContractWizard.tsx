@@ -31,6 +31,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { Container } from '@/components/ui/container';
+import { useKeyboardShortcuts, announce } from '@/components/ui/keyboard-navigation';
+import { SwipeGesture, MobileKeyboard } from '@/components/ui/mobile-interactions';
 
 // Import step components
 import { Step1ContractorInfo } from './steps/Step1ContractorInfo';
@@ -113,6 +115,28 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
 
   const { handleSubmit, trigger, formState } = methods;
 
+  // Keyboard shortcuts for wizard navigation
+  useKeyboardShortcuts({
+    'alt+arrowright': () => {
+      if (currentStep < WIZARD_STEPS.length && !hasCurrentStepErrors()) {
+        handleNext();
+      }
+    },
+    'alt+arrowleft': () => {
+      if (currentStep > 1) {
+        handlePrevious();
+      }
+    },
+    'ctrl+enter': () => {
+      if (currentStep === WIZARD_STEPS.length) {
+        handleSubmit(onSubmit)();
+      }
+    },
+    'escape': () => {
+      onCancel();
+    },
+  });
+
   // Handle next step
   const handleNext = async () => {
     setIsValidating(true);
@@ -148,7 +172,9 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
     setIsValidating(false);
     
     if (isValid && currentStep < WIZARD_STEPS.length) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      announce(`Avançou para a etapa ${nextStep}: ${WIZARD_STEPS[nextStep - 1].title}`);
     }
   };
 
@@ -178,7 +204,9 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
   // Handle previous step
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      announce(`Voltou para a etapa ${prevStep}: ${WIZARD_STEPS[prevStep - 1].title}`);
     }
   };
 
@@ -208,11 +236,14 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
           <div className="flex items-center gap-4">
             <Image
               src="/isotec-logo.webp"
-              alt="ISOTEC Logo"
+              alt="ISOTEC - Energia Solar Fotovoltaica"
               width={120}
               height={48}
               priority
+              sizes="(max-width: 768px) 128px, 160px"
               className="w-32 md:w-40"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">Novo Contrato</h1>
@@ -221,9 +252,25 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
               </p>
             </div>
           </div>
-          <Button variant="ghost" onClick={onCancel} className="text-neutral-300 hover:text-white">
-            Cancelar
-          </Button>
+          <div className="flex items-center gap-4">
+            {/* Keyboard shortcuts help */}
+            <div className="hidden lg:block text-xs text-neutral-500">
+              <p>Alt + ← / → para navegar</p>
+              <p>Esc para cancelar</p>
+            </div>
+            {/* Mobile swipe hint */}
+            <div className="block lg:hidden text-xs text-neutral-500 text-center">
+              <p>Deslize ← → para navegar</p>
+            </div>
+            <Button 
+              variant="ghost" 
+              onClick={onCancel} 
+              className="text-neutral-300 hover:text-white"
+              aria-label="Cancelar criação do contrato"
+            >
+              Cancelar
+            </Button>
+          </div>
         </div>
 
         {/* Enhanced Responsive Progress Indicator */}
@@ -236,78 +283,97 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
         {/* Wizard Content */}
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Card className="bg-neutral-800/50 border-neutral-700 rounded-xl shadow-lg min-h-[500px]">
-              <CardHeader className="p-6 md:p-8 pb-4">
-                <CardTitle className="text-white">{WIZARD_STEPS[currentStep - 1].title}</CardTitle>
-                <CardDescription className="text-neutral-400">
-                  {WIZARD_STEPS[currentStep - 1].description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 md:p-8 pt-0">
-                {/* Step Content */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="min-h-[400px]"
-                  >
-                    {currentStep === 1 && <Step1ContractorInfo />}
-                    {currentStep === 2 && <Step2Address />}
-                    {currentStep === 3 && <Step3ProjectSpecs />}
-                    {currentStep === 4 && <Step4Equipment />}
-                    {currentStep === 5 && <Step5Services />}
-                    {currentStep === 6 && <Step6Financial />}
-                    {currentStep === 7 && <Step7Review onEditStep={handleEditStep} />}
-                  </motion.div>
-                </AnimatePresence>
-              </CardContent>
+            <MobileKeyboard adjustViewport={true}>
+              <SwipeGesture
+                onSwipeLeft={() => {
+                  if (currentStep < WIZARD_STEPS.length && !hasCurrentStepErrors()) {
+                    handleNext();
+                  }
+                }}
+                onSwipeRight={() => {
+                  if (currentStep > 1) {
+                    handlePrevious();
+                  }
+                }}
+                className="touch-pan-x"
+              >
+                <Card className="bg-neutral-800/50 border-neutral-700 rounded-xl shadow-lg min-h-[500px]">
+                  <CardHeader className="p-6 md:p-8 pb-4">
+                    <CardTitle className="text-white">{WIZARD_STEPS[currentStep - 1].title}</CardTitle>
+                    <CardDescription className="text-neutral-400">
+                      {WIZARD_STEPS[currentStep - 1].description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6 md:p-8 pt-0">
+                    {/* Step Content */}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentStep}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="min-h-[400px]"
+                      >
+                        {currentStep === 1 && <Step1ContractorInfo />}
+                        {currentStep === 2 && <Step2Address />}
+                        {currentStep === 3 && <Step3ProjectSpecs />}
+                        {currentStep === 4 && <Step4Equipment />}
+                        {currentStep === 5 && <Step5Services />}
+                        {currentStep === 6 && <Step6Financial />}
+                        {currentStep === 7 && <Step7Review onEditStep={handleEditStep} />}
+                      </motion.div>
+                    </AnimatePresence>
+                  </CardContent>
 
-              {/* Navigation Buttons */}
-              <div className="flex items-center justify-between p-6 md:p-8 pt-6 border-t border-neutral-700">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="default"
-                  onClick={handlePrevious}
-                  disabled={currentStep === 1}
-                  className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white hover:border-neutral-500 disabled:border-neutral-700 disabled:text-neutral-500 disabled:hover:bg-transparent disabled:hover:text-neutral-500"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Anterior
-                </Button>
+                  {/* Navigation Buttons */}
+                  <div className="flex items-center justify-between p-6 md:p-8 pt-6 border-t border-neutral-700 gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="default"
+                      onClick={handlePrevious}
+                      disabled={currentStep === 1}
+                      className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white hover:border-neutral-500 disabled:border-neutral-700 disabled:text-neutral-500 disabled:hover:bg-transparent disabled:hover:text-neutral-500 flex-1 sm:flex-none"
+                      aria-label={`Voltar para a etapa anterior${currentStep > 1 ? `: ${WIZARD_STEPS[currentStep - 2].title}` : ''}`}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+                      Anterior
+                    </Button>
 
-                {currentStep < WIZARD_STEPS.length ? (
-                  <Button 
-                    type="button" 
-                    variant="primary"
-                    size="default"
-                    onClick={handleNext}
-                    loading={isValidating}
-                    loadingText="Validando..."
-                    disabled={hasCurrentStepErrors()}
-                    className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none"
-                  >
-                    Próximo
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button 
-                    type="submit" 
-                    variant="secondary"
-                    size="default"
-                    loading={isSubmitting}
-                    loadingText="Criando..."
-                    disabled={isSubmitting || hasCurrentStepErrors()}
-                    className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none"
-                  >
-                    Criar Contrato
-                  </Button>
-                )}
-              </div>
-            </Card>
+                    {currentStep < WIZARD_STEPS.length ? (
+                      <Button 
+                        type="button" 
+                        variant="primary"
+                        size="default"
+                        onClick={handleNext}
+                        loading={isValidating}
+                        loadingText="Validando..."
+                        disabled={hasCurrentStepErrors()}
+                        className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none"
+                        aria-label={`Avançar para a próxima etapa: ${WIZARD_STEPS[currentStep].title}`}
+                      >
+                        Próximo
+                        <ChevronRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        variant="secondary"
+                        size="default"
+                        loading={isSubmitting}
+                        loadingText="Criando..."
+                        disabled={isSubmitting || hasCurrentStepErrors()}
+                        className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none"
+                        aria-label="Finalizar e criar o contrato"
+                      >
+                        Criar Contrato
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              </SwipeGesture>
+            </MobileKeyboard>
           </form>
         </FormProvider>
 
@@ -320,10 +386,14 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
           >
             <Image
               src="/mascote.webp"
-              alt="ISOTEC Mascot"
+              alt="ISOTEC Mascot - Assistente virtual para criação de contratos"
               width={120}
               height={120}
+              loading="lazy"
+              sizes="120px"
               className="drop-shadow-2xl"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </motion.div>
         </div>

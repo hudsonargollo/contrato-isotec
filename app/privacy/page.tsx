@@ -7,12 +7,8 @@
  * Requirements: 11.6
  */
 
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Política de Privacidade | ISOTEC',
-  description: 'Política de privacidade e proteção de dados da ISOTEC',
-};
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default function PrivacyPage() {
   return (

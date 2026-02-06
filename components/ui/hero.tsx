@@ -38,6 +38,7 @@ interface HeroDescriptionProps {
 interface HeroActionsProps {
   className?: string;
   children: React.ReactNode;
+  id?: string;
 }
 
 interface HeroMascotProps {
@@ -125,7 +126,8 @@ const HeroContent = React.forwardRef<HTMLDivElement, HeroContentProps>(
 HeroContent.displayName = "HeroContent";
 
 /**
- * HeroLogo - Logo component with animation
+ * HeroLogo - Logo component with animation and optimized loading
+ * Uses priority loading since it's above the fold
  */
 const HeroLogo = React.forwardRef<HTMLDivElement, HeroLogoProps>(
   ({ src, alt, width = 240, height = 96, className, ...props }, ref) => {
@@ -143,8 +145,11 @@ const HeroLogo = React.forwardRef<HTMLDivElement, HeroLogoProps>(
           alt={alt}
           width={width}
           height={height}
-          priority
+          priority // Above the fold, load immediately
+          sizes="(max-width: 768px) 192px, 256px" // Responsive sizes
           className="w-48 md:w-64"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
       </div>
     );
@@ -200,10 +205,11 @@ HeroDescription.displayName = "HeroDescription";
  * HeroActions - Action buttons container
  */
 const HeroActions = React.forwardRef<HTMLDivElement, HeroActionsProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, id, ...props }, ref) => {
     return (
       <div
         ref={ref}
+        id={id}
         className={cn(
           "flex flex-col sm:flex-row gap-4 w-full sm:w-auto",
           "animate-in fade-in slide-in-from-top-4 duration-1000 delay-450",
@@ -219,7 +225,8 @@ const HeroActions = React.forwardRef<HTMLDivElement, HeroActionsProps>(
 HeroActions.displayName = "HeroActions";
 
 /**
- * HeroMascot - Floating mascot component
+ * HeroMascot - Floating mascot component with lazy loading
+ * Uses lazy loading since it's decorative and not immediately visible
  */
 const HeroMascot = React.forwardRef<HTMLDivElement, HeroMascotProps>(
   ({ src, alt, width = 120, height = 120, className, ...props }, ref) => {
@@ -237,7 +244,11 @@ const HeroMascot = React.forwardRef<HTMLDivElement, HeroMascotProps>(
           alt={alt}
           width={width}
           height={height}
+          loading="lazy" // Lazy load since it's decorative
+          sizes="120px" // Fixed size
           className="drop-shadow-2xl"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
       </div>
     );

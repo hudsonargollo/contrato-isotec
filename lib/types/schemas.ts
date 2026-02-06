@@ -372,7 +372,9 @@ export const contractFiltersSchema = z.object({
   searchQuery: z.string().optional(),
   searchField: z.enum(['name', 'cpf']).optional(),
   page: z.number().int().positive().optional().default(1),
-  limit: z.number().int().positive().max(100).optional().default(20)
+  limit: z.number().int().positive().max(100).optional().default(10),
+  sortBy: z.enum(['created_at', 'contractor_name', 'contract_value', 'status']).optional().default('created_at'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc')
 });
 
 /**

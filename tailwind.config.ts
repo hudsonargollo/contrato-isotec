@@ -103,10 +103,10 @@ const config: Config = {
           200: '#bfdbfe',
           300: '#93c5fd',
           400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
+          500: '#2563eb', // Improved contrast - was #3b82f6
+          600: '#1d4ed8',
+          700: '#1e40af',
+          800: '#1e3a8a',
           900: '#1e3a8a',
         },
         energy: {
@@ -115,10 +115,10 @@ const config: Config = {
           200: '#bbf7d0',
           300: '#86efac',
           400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
+          500: '#16a34a', // Improved contrast - was #22c55e
+          600: '#15803d',
+          700: '#166534',
+          800: '#14532d',
           900: '#14532d',
         },
         // Professional neutral grays
@@ -136,10 +136,10 @@ const config: Config = {
           950: '#0a0a0a',
         },
         // Semantic colors for consistent UI feedback
-        success: '#22c55e', // energy-500
-        error: '#ef4444',
+        success: '#16a34a', // energy-500 - improved contrast
+        error: '#dc2626', // improved contrast - was #ef4444
         warning: '#f59e0b', // solar-500
-        info: '#3b82f6', // ocean-500
+        info: '#2563eb', // ocean-500 - improved contrast
         
         // CSS variable-based theme colors
         'theme-solar': {

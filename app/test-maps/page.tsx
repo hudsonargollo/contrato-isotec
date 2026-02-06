@@ -11,6 +11,8 @@ import { Coordinates } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+// Client component for Google Maps testing
+
 export default function TestMapsPage() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [addressFilled, setAddressFilled] = useState(false);

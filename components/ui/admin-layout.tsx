@@ -117,11 +117,19 @@ function NavigationItem({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div>
       <Link
         href={hasChildren ? '#' : item.href}
         onClick={hasChildren ? (e) => { e.preventDefault(); handleClick(); } : onItemClick}
+        onKeyDown={handleKeyDown}
         className={cn(
           'group flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
           level > 0 && 'ml-4 pl-8',
@@ -130,17 +138,22 @@ function NavigationItem({
             : 'text-neutral-400 hover:text-white hover:bg-neutral-700/50',
           'focus:outline-none focus:ring-2 focus:ring-solar-500/50'
         )}
+        role={hasChildren ? 'button' : 'menuitem'}
+        aria-expanded={hasChildren ? isExpanded : undefined}
+        aria-current={isActive ? 'page' : undefined}
+        aria-label={hasChildren ? `${item.name} (expandir submenu)` : item.name}
       >
         <div className="flex items-center gap-3">
           <item.icon 
             className={cn(
               'w-5 h-5 transition-colors',
               isActive ? 'text-solar-400' : 'text-neutral-500 group-hover:text-neutral-300'
-            )} 
+            )}
+            aria-hidden="true"
           />
           <span>{item.name}</span>
           {item.badge && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-solar-500/20 text-solar-400 rounded-full">
+            <span className="px-2 py-0.5 text-xs font-medium bg-solar-500/20 text-solar-400 rounded-full" aria-label={`${item.badge} itens`}>
               {item.badge}
             </span>
           )}
@@ -152,13 +165,14 @@ function NavigationItem({
               'w-4 h-4 transition-transform duration-200',
               isExpanded && 'rotate-90',
               isActive ? 'text-solar-400' : 'text-neutral-500'
-            )} 
+            )}
+            aria-hidden="true"
           />
         )}
       </Link>
 
       {hasChildren && isExpanded && (
-        <div className="mt-1 space-y-1">
+        <div className="mt-1 space-y-1" role="menu" aria-label={`Submenu de ${item.name}`}>
           {item.children?.map((child) => (
             <NavigationItem
               key={child.href}
@@ -190,25 +204,32 @@ function Sidebar({
         <div 
           className="fixed inset-0 z-40 bg-neutral-900/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-64 bg-neutral-900/95 backdrop-blur-sm border-r border-neutral-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
+        aria-label="Menu de navegação principal"
+        role="navigation"
       >
         {/* Sidebar header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-700">
           <div className="flex items-center gap-3">
             <Image
               src="/isotec-logo.webp"
-              alt="ISOTEC Logo"
+              alt="ISOTEC - Painel Administrativo"
               width={32}
               height={32}
+              priority
+              sizes="32px"
               className="w-8 h-8"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
             <span className="text-lg font-semibold text-white">Admin</span>
           </div>
@@ -218,13 +239,14 @@ function Sidebar({
             size="sm"
             onClick={onClose}
             className="lg:hidden text-neutral-400 hover:text-white"
+            aria-label="Fechar menu de navegação"
           >
             <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto" role="menubar" aria-label="Menu principal">
           {navigation.map((item) => (
             <NavigationItem
               key={item.href}
@@ -239,13 +261,14 @@ function Sidebar({
         <div className="p-4 border-t border-neutral-700">
           <Link
             href="/"
-            className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-neutral-400 rounded-lg hover:text-white hover:bg-neutral-700/50 transition-all duration-200"
+            className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-neutral-400 rounded-lg hover:text-white hover:bg-neutral-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-solar-500/50"
+            aria-label="Voltar ao site principal"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5" aria-hidden="true" />
             <span>Voltar ao Site</span>
           </Link>
         </div>
-      </div>
+      </aside>
     </>
   );
 }
@@ -258,7 +281,7 @@ function Header({
   userInfo?: AdminLayoutProps['userInfo'];
 }) {
   return (
-    <header className="h-16 bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700 flex items-center justify-between px-4 lg:px-6">
+    <header className="h-16 bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700 flex items-center justify-between px-4 lg:px-6" role="banner">
       {/* Left side - Menu button and breadcrumb */}
       <div className="flex items-center gap-4">
         <Button
@@ -266,6 +289,8 @@ function Header({
           size="sm"
           onClick={onMenuClick}
           className="lg:hidden text-neutral-400 hover:text-white"
+          aria-label="Abrir menu de navegação"
+          aria-expanded="false"
         >
           <Menu className="w-5 h-5" />
         </Button>
@@ -285,14 +310,14 @@ function Header({
         {/* Quick actions */}
         <div className="hidden md:flex items-center gap-2">
           <Link href="/wizard">
-            <Button size="sm" className="bg-solar-500 hover:bg-solar-600 text-neutral-900">
+            <Button size="sm" className="bg-solar-500 hover:bg-solar-600 text-neutral-900" aria-label="Criar novo contrato">
               Novo Contrato
             </Button>
           </Link>
         </div>
 
         {/* User info */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" role="region" aria-label="Informações do usuário">
           {userInfo && (
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-white">
@@ -305,8 +330,12 @@ function Header({
           )}
           
           {/* User avatar */}
-          <div className="w-8 h-8 bg-gradient-to-br from-solar-500 to-solar-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-semibold text-neutral-900">
+          <div 
+            className="w-8 h-8 bg-gradient-to-br from-solar-500 to-solar-600 rounded-full flex items-center justify-center"
+            role="img"
+            aria-label={`Avatar do usuário ${userInfo?.name || 'Administrador'}`}
+          >
+            <span className="text-sm font-semibold text-neutral-900" aria-hidden="true">
               {userInfo?.name?.charAt(0) || 'A'}
             </span>
           </div>
@@ -347,10 +376,14 @@ export function AdminLayout({ children, userInfo }: AdminLayoutProps) {
       <div className="fixed bottom-8 right-8 hidden xl:block animate-float pointer-events-none">
         <Image
           src="/mascote.webp"
-          alt="ISOTEC Mascot"
+          alt="ISOTEC Mascot - Assistente administrativo"
           width={100}
           height={100}
+          loading="lazy"
+          sizes="100px"
           className="drop-shadow-2xl opacity-80"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
       </div>
     </div>

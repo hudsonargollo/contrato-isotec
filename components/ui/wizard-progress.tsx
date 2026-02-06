@@ -35,10 +35,10 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
   const progressPercentage = (currentStep / steps.length) * 100;
 
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full', className)} role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={steps.length} aria-label={`Progresso do wizard: etapa ${currentStep} de ${steps.length}`}>
       {/* Desktop Progress Indicator - Full labels and descriptions */}
       <div className="hidden md:block">
-        <div className="flex items-center justify-between mb-6">
+        <nav aria-label="Progresso do wizard" className="flex items-center justify-between mb-6">
           {steps.map((step, index) => (
             <React.Fragment key={step.id}>
               {/* Step Circle and Label */}
@@ -70,6 +70,14 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                   }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
+                  role="img"
+                  aria-label={
+                    currentStep > step.id 
+                      ? `Etapa ${step.id} concluída: ${step.title}` 
+                      : currentStep === step.id 
+                      ? `Etapa atual ${step.id}: ${step.title}` 
+                      : `Etapa futura ${step.id}: ${step.title}`
+                  }
                 >
                   {currentStep > step.id ? (
                     <motion.div
@@ -77,7 +85,7 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ duration: 0.4, ease: 'backOut' }}
                     >
-                      <Check className="w-6 h-6" />
+                      <Check className="w-6 h-6" aria-hidden="true" />
                     </motion.div>
                   ) : (
                     <motion.span
@@ -87,6 +95,7 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                         fontWeight: currentStep === step.id ? 700 : 600
                       }}
                       transition={{ duration: 0.3 }}
+                      aria-hidden="true"
                     >
                       {step.id}
                     </motion.span>
@@ -125,7 +134,7 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
 
               {/* Connection Line */}
               {index < steps.length - 1 && (
-                <div className="flex-1 h-1 mx-4 relative">
+                <div className="flex-1 h-1 mx-4 relative" role="presentation">
                   {/* Background line */}
                   <div className="absolute inset-0 bg-neutral-700 rounded-full" />
                   
@@ -141,17 +150,18 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                       ease: 'easeInOut',
                       delay: currentStep > step.id ? 0.2 : 0
                     }}
+                    aria-hidden="true"
                   />
                 </div>
               )}
             </React.Fragment>
           ))}
-        </div>
+        </nav>
       </div>
 
       {/* Mobile Progress Indicator - Compact with numbers only */}
       <div className="block md:hidden">
-        <div className="flex items-center justify-between mb-4">
+        <nav aria-label="Progresso do wizard (versão compacta)" className="flex items-center justify-between mb-4">
           {steps.map((step, index) => (
             <React.Fragment key={step.id}>
               {/* Compact Step Circle */}
@@ -176,6 +186,14 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                   scale: currentStep === step.id ? 1.1 : 1,
                 }}
                 transition={{ duration: 0.2 }}
+                role="img"
+                aria-label={
+                  currentStep > step.id 
+                    ? `Etapa ${step.id} concluída` 
+                    : currentStep === step.id 
+                    ? `Etapa atual ${step.id}` 
+                    : `Etapa futura ${step.id}`
+                }
               >
                 {currentStep > step.id ? (
                   <motion.div
@@ -183,16 +201,16 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.3, ease: 'backOut' }}
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4" aria-hidden="true" />
                   </motion.div>
                 ) : (
-                  step.id
+                  <span aria-hidden="true">{step.id}</span>
                 )}
               </motion.div>
 
               {/* Mobile Connection Line */}
               {index < steps.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 relative">
+                <div className="flex-1 h-0.5 mx-2 relative" role="presentation">
                   <div className="absolute inset-0 bg-neutral-700 rounded-full" />
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-solar-500 to-solar-600 rounded-full"
@@ -205,12 +223,13 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
                       ease: 'easeInOut',
                       delay: currentStep > step.id ? 0.1 : 0
                     }}
+                    aria-hidden="true"
                   />
                 </div>
               )}
             </React.Fragment>
           ))}
-        </div>
+        </nav>
 
         {/* Current Step Info for Mobile */}
         <motion.div 
@@ -219,6 +238,8 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+          role="status"
+          aria-live="polite"
         >
           <p className="text-white font-medium text-sm">
             {steps[currentStep - 1]?.title}
@@ -233,6 +254,11 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
       <motion.div 
         className="relative h-2 w-full overflow-hidden rounded-full bg-neutral-700 mt-6"
         initial={false}
+        role="progressbar"
+        aria-valuenow={progressPercentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Progresso geral: ${Math.round(progressPercentage)}% concluído`}
       >
         {/* Animated progress fill */}
         <motion.div
@@ -257,6 +283,7 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
               ease: 'linear',
               delay: 1,
             }}
+            aria-hidden="true"
           />
         </motion.div>
 
@@ -269,6 +296,7 @@ export function WizardProgress({ steps, currentStep, className }: WizardProgress
             x: `${Math.max(0, Math.min(progressPercentage - 5, 90))}%`
           }}
           transition={{ duration: 0.3 }}
+          aria-hidden="true"
         >
           {Math.round(progressPercentage)}%
         </motion.div>

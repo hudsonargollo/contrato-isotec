@@ -3,6 +3,10 @@
  * Showcases the enhanced Button component with all variants and states
  */
 
+'use client';
+
+// Client component for enhanced button demo
+
 import { EnhancedButtonDemo } from '@/components/demo/EnhancedButtonDemo';
 
 export default function EnhancedButtonDemoPage() {
@@ -12,8 +16,3 @@ export default function EnhancedButtonDemoPage() {
     </div>
   );
 }
-
-export const metadata = {
-  title: 'Enhanced Button Demo - ISOTEC UI Components',
-  description: 'Showcase of the enhanced Button component with solar gradient, multiple variants, and loading states.',
-};

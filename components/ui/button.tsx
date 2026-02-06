@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // Base styles with enhanced transitions and accessibility
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed active:scale-95',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed active:scale-95 touch-manipulation select-none',
   {
     variants: {
       variant: {
@@ -64,10 +64,10 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        sm: 'h-9 px-3 text-sm min-w-[2.25rem]',
-        default: 'h-10 px-4 py-2 text-base min-w-[2.5rem]',
-        lg: 'h-11 px-6 text-lg min-w-[2.75rem]',
-        xl: 'h-12 px-8 text-xl min-w-[3rem]',
+        sm: 'min-h-[44px] h-11 px-3 text-sm min-w-[44px]', // Minimum 44px touch target
+        default: 'min-h-[48px] h-12 px-4 py-2 text-base min-w-[48px]', // Recommended 48px touch target
+        lg: 'min-h-[52px] h-13 px-6 text-lg min-w-[52px]', // Large touch target
+        xl: 'min-h-[56px] h-14 px-8 text-xl min-w-[56px]', // Extra large touch target
       },
     },
     defaultVariants: {
@@ -83,6 +83,8 @@ export interface ButtonProps
   children: React.ReactNode;
   loading?: boolean;
   loadingText?: string;
+  'aria-label'?: string;
+  'aria-describedby'?: string;
 }
 
 export function Button({
@@ -93,18 +95,20 @@ export function Button({
   loading = false,
   loadingText,
   disabled,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
   ...restProps
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  
-  // Explicitly exclude loading and loadingText from DOM props
-  const { loading: _, loadingText: __, ...domProps } = restProps as any;
   
   return (
     <button
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={isDisabled}
-      {...domProps}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      aria-busy={loading}
+      {...restProps}
     >
       {loading && (
         <Loader2 
@@ -113,7 +117,8 @@ export function Button({
             size === 'sm' ? 'h-3 w-3' : 
             size === 'lg' ? 'h-5 w-5' :
             size === 'xl' ? 'h-6 w-6' : 'h-4 w-4'
-          )} 
+          )}
+          aria-hidden="true"
         />
       )}
       {loading ? (loadingText || 'Loading...') : children}
