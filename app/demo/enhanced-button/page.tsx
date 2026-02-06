@@ -5,9 +5,10 @@
 
 'use client';
 
-// Client component for enhanced button demo
-
 import { EnhancedButtonDemo } from '@/components/demo/EnhancedButtonDemo';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default function EnhancedButtonDemoPage() {
   return (
