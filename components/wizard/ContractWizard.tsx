@@ -229,60 +229,44 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
-      <Container size="none" padding="none" className="max-w-4xl px-4 py-8">
-        {/* Header with Logo */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/isotec-logo.webp"
-              alt="ISOTEC - Energia Solar Fotovoltaica"
-              width={120}
-              height={48}
-              priority
-              sizes="(max-width: 768px) 128px, 160px"
-              className="w-32 md:w-40"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Novo Contrato</h1>
-              <p className="text-sm text-neutral-400">
-                Sistema de Contratos Fotovoltaicos
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Keyboard shortcuts help */}
-            <div className="hidden lg:block text-xs text-neutral-500">
-              <p>Alt + ← / → para navegar</p>
-              <p>Esc para cancelar</p>
-            </div>
-            {/* Mobile swipe hint */}
-            <div className="block lg:hidden text-xs text-neutral-500 text-center">
-              <p>Deslize ← → para navegar</p>
-            </div>
-            <Button 
-              variant="ghost" 
-              onClick={onCancel} 
-              className="text-neutral-300 hover:text-white"
-              aria-label="Cancelar criação do contrato"
-            >
-              Cancelar
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 flex flex-col">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/isotec-logo.webp"
+            alt="ISOTEC"
+            width={80}
+            height={32}
+            priority
+            className="w-20 md:w-24"
+          />
+          <div className="hidden sm:block">
+            <h1 className="text-lg md:text-xl font-bold text-white">Novo Contrato</h1>
           </div>
         </div>
+        <Button 
+          variant="ghost" 
+          onClick={onCancel} 
+          className="text-neutral-300 hover:text-white text-sm"
+        >
+          Cancelar
+        </Button>
+      </div>
 
-        {/* Enhanced Responsive Progress Indicator */}
+      {/* Progress Indicator - More Compact */}
+      <div className="px-4 md:px-6 py-4">
         <WizardProgress 
           steps={WIZARD_STEPS}
           currentStep={currentStep}
-          className="mb-8"
+          className="max-w-4xl mx-auto"
         />
+      </div>
 
-        {/* Wizard Content */}
+      {/* Main Content - Optimized for No Scrolling */}
+      <div className="flex-1 flex flex-col px-4 md:px-6 pb-4">
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
             <MobileKeyboard adjustViewport={true}>
               <SwipeGesture
                 onSwipeLeft={() => {
@@ -295,25 +279,20 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                     handlePrevious();
                   }
                 }}
-                className="touch-pan-x"
+                className="flex-1 flex flex-col"
               >
-                <Card className="bg-neutral-800/50 border-neutral-700 rounded-xl shadow-lg min-h-[500px]">
-                  <CardHeader className="p-6 md:p-8 pb-4">
-                    <CardTitle className="text-white">{WIZARD_STEPS[currentStep - 1].title}</CardTitle>
-                    <CardDescription className="text-neutral-400">
-                      {WIZARD_STEPS[currentStep - 1].description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6 md:p-8 pt-0">
-                    {/* Step Content */}
+                {/* Content Card - Optimized Height */}
+                <Card className="bg-neutral-800/50 border-neutral-700 rounded-xl shadow-lg flex-1 flex flex-col">
+                  {/* Step Content - No Redundant Header */}
+                  <CardContent className="flex-1 p-4 md:p-6 overflow-hidden">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentStep}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="min-h-[400px]"
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="h-full flex flex-col"
                       >
                         {currentStep === 1 && <Step1ContractorInfo />}
                         {currentStep === 2 && <Step2Address />}
@@ -326,20 +305,27 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                     </AnimatePresence>
                   </CardContent>
 
-                  {/* Navigation Buttons */}
-                  <div className="flex items-center justify-between p-6 md:p-8 pt-6 border-t border-neutral-700 gap-4">
+                  {/* Navigation Buttons - Fixed at Bottom */}
+                  <div className="flex items-center justify-between p-4 md:p-6 border-t border-neutral-700 gap-4 bg-neutral-800/30">
                     <Button
                       type="button"
                       variant="outline"
                       size="default"
                       onClick={handlePrevious}
                       disabled={currentStep === 1}
-                      className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white hover:border-neutral-500 disabled:border-neutral-700 disabled:text-neutral-500 disabled:hover:bg-transparent disabled:hover:text-neutral-500 flex-1 sm:flex-none"
-                      aria-label={`Voltar para a etapa anterior${currentStep > 1 ? `: ${WIZARD_STEPS[currentStep - 2].title}` : ''}`}
+                      className="border-neutral-600 text-neutral-300 hover:bg-neutral-700 hover:text-white hover:border-neutral-500 disabled:border-neutral-700 disabled:text-neutral-500 disabled:hover:bg-transparent disabled:hover:text-neutral-500 flex-1 sm:flex-none min-w-[100px]"
                     >
-                      <ChevronLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-                      Anterior
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      <span className="hidden sm:inline">Anterior</span>
+                      <span className="sm:hidden">Voltar</span>
                     </Button>
+
+                    {/* Step Indicator for Mobile */}
+                    <div className="flex items-center gap-2 text-sm text-neutral-400 sm:hidden">
+                      <span>{currentStep}</span>
+                      <span>/</span>
+                      <span>{WIZARD_STEPS.length}</span>
+                    </div>
 
                     {currentStep < WIZARD_STEPS.length ? (
                       <Button 
@@ -348,13 +334,13 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                         size="default"
                         onClick={handleNext}
                         loading={isValidating}
-                        loadingText="Validando..."
+                        loadingText="..."
                         disabled={hasCurrentStepErrors()}
-                        className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none"
-                        aria-label={`Avançar para a próxima etapa: ${WIZARD_STEPS[currentStep].title}`}
+                        className="bg-gradient-to-r from-solar-500 to-solar-600 text-neutral-900 font-semibold shadow-lg shadow-solar-500/30 hover:shadow-solar-500/50 hover:from-solar-600 hover:to-solar-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none min-w-[100px]"
                       >
-                        Próximo
-                        <ChevronRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                        <span className="hidden sm:inline">Próximo</span>
+                        <span className="sm:hidden">Avançar</span>
+                        <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
                     ) : (
                       <Button 
@@ -362,12 +348,12 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
                         variant="secondary"
                         size="default"
                         loading={isSubmitting}
-                        loadingText="Criando..."
+                        loadingText="..."
                         disabled={isSubmitting || hasCurrentStepErrors()}
-                        className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none"
-                        aria-label="Finalizar e criar o contrato"
+                        className="bg-gradient-to-r from-energy-500 to-energy-600 text-white font-semibold shadow-lg shadow-energy-500/30 hover:shadow-energy-500/50 hover:from-energy-600 hover:to-energy-700 disabled:from-neutral-400 disabled:to-neutral-500 disabled:text-neutral-600 disabled:shadow-none flex-1 sm:flex-none min-w-[100px]"
                       >
-                        Criar Contrato
+                        <span className="hidden sm:inline">Criar Contrato</span>
+                        <span className="sm:hidden">Finalizar</span>
                       </Button>
                     )}
                   </div>
@@ -376,28 +362,25 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
             </MobileKeyboard>
           </form>
         </FormProvider>
+      </div>
 
-        {/* Mascot - Persistent Guide */}
-        <div className="fixed bottom-8 right-8 hidden lg:block animate-float">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, type: 'spring' }}
-          >
-            <Image
-              src="/mascote.webp"
-              alt="ISOTEC Mascot - Assistente virtual para criação de contratos"
-              width={120}
-              height={120}
-              loading="lazy"
-              sizes="120px"
-              className="drop-shadow-2xl"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            />
-          </motion.div>
-        </div>
-      </Container>
+      {/* Mascot - Desktop Only */}
+      <div className="fixed bottom-8 right-8 hidden lg:block animate-float pointer-events-none">
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.5, type: 'spring' }}
+        >
+          <Image
+            src="/mascote.webp"
+            alt="ISOTEC Mascot"
+            width={100}
+            height={100}
+            loading="lazy"
+            className="drop-shadow-2xl"
+          />
+        </motion.div>
+      </div>
     </div>
   );
 }

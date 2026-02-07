@@ -29,106 +29,103 @@ export function Step1ContractorInfo() {
   };
 
   return (
-    <MobileForm adjustForKeyboard={true}>
-      <div className="space-y-6">
-        <div className="space-y-4">
-          {/* Contractor Name */}
-          <div className="space-y-2">
-            <Label htmlFor="contractorName">
-              Nome Completo <span className="text-red-500">*</span>
-            </Label>
-            <MobileFormField
-              id="contractorName"
-              {...register('contractorName')}
-              placeholder="Digite o nome completo do contratante"
-              className={errors.contractorName ? 'border-red-500' : ''}
-              autoScrollOnFocus={true}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
-            {errors.contractorName && (
-              <p className="text-sm text-red-500">
-                {errors.contractorName.message as string}
-              </p>
-            )}
-          </div>
+    <div className="h-full flex flex-col">
+      {/* Step Title - Compact */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-white mb-1">Identificação</h2>
+        <p className="text-sm text-neutral-400">Dados do contratante</p>
+      </div>
 
-          {/* CPF */}
-          <div className="space-y-2">
-            <Label htmlFor="contractorCPF">
-              CPF <span className="text-red-500">*</span>
-            </Label>
-            <MobileInputTypes.Number
-              id="contractorCPF"
-              {...register('contractorCPF')}
-              placeholder="000.000.000-00"
-              onBlur={handleCPFBlur}
-              maxLength={14}
-              className={errors.contractorCPF ? 'border-red-500' : ''}
-              autoScrollOnFocus={true}
-              autoComplete="off"
-            />
-            {errors.contractorCPF && (
-              <p className="text-sm text-red-500">
-                {errors.contractorCPF.message as string}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Digite apenas números ou use o formato XXX.XXX.XXX-XX
+      {/* Form Fields - Optimized Grid */}
+      <div className="flex-1 space-y-4">
+        {/* Name - Full Width */}
+        <div>
+          <Label htmlFor="contractorName" className="text-sm font-medium text-neutral-300">
+            Nome Completo <span className="text-red-400">*</span>
+          </Label>
+          <MobileFormField
+            id="contractorName"
+            {...register('contractorName')}
+            placeholder="Digite o nome completo"
+            className={`mt-1 ${errors.contractorName ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+            autoCapitalize="words"
+            autoComplete="name"
+          />
+          {errors.contractorName && (
+            <p className="text-xs text-red-400 mt-1">
+              {errors.contractorName.message as string}
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* Email (Optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="contractorEmail">
-              E-mail <span className="text-muted-foreground text-xs">(opcional)</span>
+        {/* CPF - Full Width */}
+        <div>
+          <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
+            CPF <span className="text-red-400">*</span>
+          </Label>
+          <MobileInputTypes.Number
+            id="contractorCPF"
+            {...register('contractorCPF')}
+            placeholder="000.000.000-00"
+            onBlur={handleCPFBlur}
+            maxLength={14}
+            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+            autoComplete="off"
+          />
+          {errors.contractorCPF && (
+            <p className="text-xs text-red-400 mt-1">
+              {errors.contractorCPF.message as string}
+            </p>
+          )}
+        </div>
+
+        {/* Email and Phone - Side by Side on Desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="contractorEmail" className="text-sm font-medium text-neutral-300">
+              E-mail <span className="text-xs text-neutral-500">(opcional)</span>
             </Label>
             <MobileInputTypes.Email
               id="contractorEmail"
               {...register('contractorEmail')}
               placeholder="email@exemplo.com"
-              className={errors.contractorEmail ? 'border-red-500' : ''}
-              autoScrollOnFocus={true}
+              className={`mt-1 ${errors.contractorEmail ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
               autoComplete="email"
               autoCapitalize="none"
             />
             {errors.contractorEmail && (
-              <p className="text-sm text-red-500">
+              <p className="text-xs text-red-400 mt-1">
                 {errors.contractorEmail.message as string}
               </p>
             )}
           </div>
 
-          {/* Phone (Optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="contractorPhone">
-              Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
+          <div>
+            <Label htmlFor="contractorPhone" className="text-sm font-medium text-neutral-300">
+              Telefone <span className="text-xs text-neutral-500">(opcional)</span>
             </Label>
             <MobileInputTypes.Phone
               id="contractorPhone"
               {...register('contractorPhone')}
               placeholder="(11) 98765-4321"
-              className={errors.contractorPhone ? 'border-red-500' : ''}
-              autoScrollOnFocus={true}
+              className={`mt-1 ${errors.contractorPhone ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
               autoComplete="tel"
             />
             {errors.contractorPhone && (
-              <p className="text-sm text-red-500">
+              <p className="text-xs text-red-400 mt-1">
                 {errors.contractorPhone.message as string}
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
-              Telefone para contato com o cliente
-            </p>
           </div>
         </div>
-
-        <div className="p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
-          <p className="text-sm text-blue-400">
-            <strong>Dica:</strong> O CPF será validado automaticamente. Certifique-se de que os dados estão corretos antes de prosseguir.
-          </p>
-        </div>
       </div>
-    </MobileForm>
+
+      {/* Info Tip - Compact */}
+      <div className="mt-6 p-3 bg-solar-500/10 border border-solar-500/20 rounded-lg">
+        <p className="text-xs text-solar-300">
+          💡 O CPF será validado automaticamente
+        </p>
+      </div>
+    </div>
   );
 }
