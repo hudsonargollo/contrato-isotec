@@ -139,22 +139,22 @@ export function validateCPF(cpf: string): boolean {
  * @returns Error message string, or null if CPF is valid
  * 
  * @example
- * getCPFErrorMessage('123') // returns 'CPF must contain exactly 11 digits'
- * getCPFErrorMessage('111.111.111-11') // returns 'CPF cannot have all identical digits'
- * getCPFErrorMessage('123.456.789-00') // returns 'CPF check digits are invalid'
+ * getCPFErrorMessage('123') // returns 'CPF deve conter exatamente 11 dígitos'
+ * getCPFErrorMessage('111.111.111-11') // returns 'CPF não pode ter todos os dígitos iguais'
+ * getCPFErrorMessage('123.456.789-00') // returns 'CPF possui dígitos verificadores inválidos'
  */
 export function getCPFErrorMessage(cpf: string): string | null {
   const sanitized = sanitizeCPF(cpf);
   
   // Check length
   if (sanitized.length !== 11) {
-    return 'CPF must contain exactly 11 digits';
+    return 'CPF deve conter exatamente 11 dígitos';
   }
   
   // Check for all same digits
   const allSameDigit = /^(\d)\1{10}$/.test(sanitized);
   if (allSameDigit) {
-    return 'CPF cannot have all identical digits';
+    return 'CPF não pode ter todos os dígitos iguais';
   }
   
   // Check digits
@@ -169,7 +169,7 @@ export function getCPFErrorMessage(cpf: string): string | null {
     providedCheckDigits[0] !== calculatedCheckDigits[0] ||
     providedCheckDigits[1] !== calculatedCheckDigits[1]
   ) {
-    return 'CPF check digits are invalid';
+    return 'CPF possui dígitos verificadores inválidos';
   }
   
   return null;

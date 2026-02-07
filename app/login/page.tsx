@@ -145,17 +145,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Floating Mascot */}
-      <div className="fixed bottom-8 right-8 hidden lg:block animate-float">
-        <Image
-          src="/mascote.webp"
-          alt="ISOTEC Mascot"
-          width={120}
-          height={120}
-          className="drop-shadow-2xl"
-        />
-      </div>
     </main>
   );
 }

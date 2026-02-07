@@ -97,7 +97,7 @@ export default function Home() {
           </HeroContent>
         </HeroSection>
 
-        {/* Floating Mascot */}
+        {/* Integrated Mascot - Part of Hero Composition */}
         <HeroMascot
           src="/mascote.webp"
           alt="ISOTEC Mascot"

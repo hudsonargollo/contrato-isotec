@@ -371,21 +371,6 @@ export function AdminLayout({ children, userInfo }: AdminLayoutProps) {
           {children}
         </main>
       </div>
-
-      {/* Floating mascot - only on desktop */}
-      <div className="fixed bottom-8 right-8 hidden xl:block animate-float pointer-events-none">
-        <Image
-          src="/mascote.webp"
-          alt="ISOTEC Mascot - Assistente administrativo"
-          width={100}
-          height={100}
-          loading="lazy"
-          sizes="100px"
-          className="drop-shadow-2xl opacity-80"
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-        />
-      </div>
     </div>
   );
 }

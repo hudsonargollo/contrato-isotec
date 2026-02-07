@@ -9,28 +9,34 @@ jest.mock('next/link', () => {
   };
 });
 
-describe('Floating Mascot Requirements Validation', () => {
-  describe('Task 5.4: Add floating mascot with animation', () => {
-    it('positions mascot at bottom-right (fixed bottom-8 right-8)', () => {
+describe('Hero Mascot Composition Requirements Validation', () => {
+  describe('Task 5.4: Mascot integrated into hero composition', () => {
+    it('positions mascot within hero composition (absolute bottom-0 right-8)', () => {
       const { container } = render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify fixed positioning at bottom-right
-      expect(mascotContainer).toHaveClass('fixed');
-      expect(mascotContainer).toHaveClass('bottom-8');
+      // Verify absolute positioning within hero composition
+      expect(mascotContainer).toHaveClass('absolute');
+      expect(mascotContainer).toHaveClass('bottom-0');
       expect(mascotContainer).toHaveClass('right-8');
+      expect(mascotContainer).toHaveClass('xl:right-16');
     });
 
-    it('implements float animation', () => {
+    it('implements float animation and entrance animation', () => {
       const { container } = render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify float animation is applied
-      expect(mascotContainer).toHaveClass('animate-float');
+      // Verify float animation is applied to image
+      expect(mascotImage).toHaveClass('animate-float');
+      
+      // Verify entrance animation is applied to container
+      expect(mascotContainer).toHaveClass('animate-in');
+      expect(mascotContainer).toHaveClass('fade-in');
+      expect(mascotContainer).toHaveClass('slide-in-from-bottom-8');
     });
 
     it('hides on mobile, shows on desktop (hidden lg:block)', () => {
@@ -58,28 +64,32 @@ describe('Floating Mascot Requirements Validation', () => {
       expect(mascotImage).toHaveClass('drop-shadow-2xl');
     });
 
-    it('does not interfere with main content', () => {
+    it('integrates seamlessly with hero composition', () => {
       render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify fixed positioning removes it from document flow
-      expect(mascotContainer).toHaveClass('fixed');
+      // Verify absolute positioning integrates with hero layout
+      expect(mascotContainer).toHaveClass('absolute');
       
-      // Verify main content is still accessible
+      // Verify main content is still accessible and not overlapped
       expect(screen.getByText('Sistema de Contratos Fotovoltaicos')).toBeInTheDocument();
       expect(screen.getByText('Criar Novo Contrato')).toBeInTheDocument();
     });
 
-    it('has appropriate size for desktop viewing', () => {
+    it('has appropriate size for hero composition', () => {
       render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       
-      // Verify default dimensions (120x120 as specified in component)
-      expect(mascotImage).toHaveAttribute('width', '120');
-      expect(mascotImage).toHaveAttribute('height', '120');
+      // Verify larger dimensions for hero composition (200x200 default)
+      expect(mascotImage).toHaveAttribute('width', '200');
+      expect(mascotImage).toHaveAttribute('height', '200');
+      
+      // Verify responsive sizing classes
+      expect(mascotImage).toHaveClass('w-48');
+      expect(mascotImage).toHaveClass('xl:w-60');
     });
 
     it('uses semantic HTML and accessibility best practices', () => {
@@ -115,23 +125,24 @@ describe('Floating Mascot Requirements Validation', () => {
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify uses Tailwind animation class (CSS-based, not JS-based)
-      expect(mascotContainer).toHaveClass('animate-float');
+      // Verify uses Tailwind animation classes (CSS-based, not JS-based)
+      expect(mascotImage).toHaveClass('animate-float');
+      expect(mascotContainer).toHaveClass('animate-in');
       
       // Verify no inline styles that would indicate JS animation
       expect(mascotContainer).not.toHaveAttribute('style');
     });
 
-    it('provides visual interest without being distracting', () => {
+    it('provides visual interest as part of hero composition', () => {
       render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify positioned away from main content
-      expect(mascotContainer).toHaveClass('bottom-8', 'right-8');
+      // Verify positioned as part of hero composition
+      expect(mascotContainer).toHaveClass('bottom-0', 'right-8');
       
-      // Verify only visible on larger screens where it won't interfere
+      // Verify only visible on larger screens where it enhances the design
       expect(mascotContainer).toHaveClass('hidden', 'lg:block');
     });
   });
@@ -150,14 +161,23 @@ describe('Floating Mascot Requirements Validation', () => {
       expect(mascotContainer).toHaveClass('lg:block');
     });
 
-    it('maintains proper spacing on desktop', () => {
+    it('maintains proper spacing within hero composition', () => {
       const { container } = render(<Home />);
       
       const mascotImage = screen.getByAltText('ISOTEC Mascot');
       const mascotContainer = mascotImage.parentElement;
       
-      // Verify proper spacing from edges (8 * 4px = 32px)
-      expect(mascotContainer).toHaveClass('bottom-8', 'right-8');
+      // Verify proper spacing from edges with responsive adjustments
+      expect(mascotContainer).toHaveClass('bottom-0', 'right-8', 'xl:right-16');
+    });
+
+    it('scales appropriately on different screen sizes', () => {
+      render(<Home />);
+      
+      const mascotImage = screen.getByAltText('ISOTEC Mascot');
+      
+      // Verify responsive sizing
+      expect(mascotImage).toHaveClass('w-48', 'xl:w-60');
     });
   });
 });

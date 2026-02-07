@@ -170,30 +170,30 @@ describe('CPF Validation Module', () => {
     });
 
     it('should return length error for CPF with wrong length', () => {
-      expect(getCPFErrorMessage('123')).toBe('CPF must contain exactly 11 digits');
-      expect(getCPFErrorMessage('123456789')).toBe('CPF must contain exactly 11 digits');
-      expect(getCPFErrorMessage('123456789012')).toBe('CPF must contain exactly 11 digits');
+      expect(getCPFErrorMessage('123')).toBe('CPF deve conter exatamente 11 dígitos');
+      expect(getCPFErrorMessage('123456789')).toBe('CPF deve conter exatamente 11 dígitos');
+      expect(getCPFErrorMessage('123456789012')).toBe('CPF deve conter exatamente 11 dígitos');
     });
 
     it('should return identical digits error for CPF with all same digits', () => {
-      expect(getCPFErrorMessage('111.111.111-11')).toBe('CPF cannot have all identical digits');
-      expect(getCPFErrorMessage('00000000000')).toBe('CPF cannot have all identical digits');
-      expect(getCPFErrorMessage('999.999.999-99')).toBe('CPF cannot have all identical digits');
+      expect(getCPFErrorMessage('111.111.111-11')).toBe('CPF não pode ter todos os dígitos iguais');
+      expect(getCPFErrorMessage('00000000000')).toBe('CPF não pode ter todos os dígitos iguais');
+      expect(getCPFErrorMessage('999.999.999-99')).toBe('CPF não pode ter todos os dígitos iguais');
     });
 
     it('should return check digit error for CPF with invalid check digits', () => {
-      expect(getCPFErrorMessage('123.456.789-00')).toBe('CPF check digits are invalid');
-      expect(getCPFErrorMessage('123.456.789-99')).toBe('CPF check digits are invalid');
-      expect(getCPFErrorMessage('111.444.777-00')).toBe('CPF check digits are invalid');
+      expect(getCPFErrorMessage('123.456.789-00')).toBe('CPF possui dígitos verificadores inválidos');
+      expect(getCPFErrorMessage('123.456.789-99')).toBe('CPF possui dígitos verificadores inválidos');
+      expect(getCPFErrorMessage('111.444.777-00')).toBe('CPF possui dígitos verificadores inválidos');
     });
 
     it('should prioritize length error over other errors', () => {
-      expect(getCPFErrorMessage('111')).toBe('CPF must contain exactly 11 digits');
+      expect(getCPFErrorMessage('111')).toBe('CPF deve conter exatamente 11 dígitos');
     });
 
     it('should prioritize identical digits error over check digit error', () => {
       // All same digits would fail check digit validation too, but should show specific error
-      expect(getCPFErrorMessage('111.111.111-11')).toBe('CPF cannot have all identical digits');
+      expect(getCPFErrorMessage('111.111.111-11')).toBe('CPF não pode ter todos os dígitos iguais');
     });
   });
 });

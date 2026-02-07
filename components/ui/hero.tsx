@@ -225,16 +225,17 @@ const HeroActions = React.forwardRef<HTMLDivElement, HeroActionsProps>(
 HeroActions.displayName = "HeroActions";
 
 /**
- * HeroMascot - Floating mascot component with lazy loading
- * Uses lazy loading since it's decorative and not immediately visible
+ * HeroMascot - Integrated mascot component for hero composition
+ * Positioned as part of the hero layout, not floating
  */
 const HeroMascot = React.forwardRef<HTMLDivElement, HeroMascotProps>(
-  ({ src, alt, width = 120, height = 120, className, ...props }, ref) => {
+  ({ src, alt, width = 200, height = 200, className, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "fixed bottom-8 right-8 hidden lg:block animate-float",
+          "hidden lg:block absolute bottom-0 right-8 xl:right-16",
+          "animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700",
           className
         )}
         {...props}
@@ -245,8 +246,8 @@ const HeroMascot = React.forwardRef<HTMLDivElement, HeroMascotProps>(
           width={width}
           height={height}
           loading="lazy" // Lazy load since it's decorative
-          sizes="120px" // Fixed size
-          className="drop-shadow-2xl"
+          sizes="(min-width: 1280px) 240px, 200px" // Responsive sizes
+          className="drop-shadow-2xl animate-float w-48 xl:w-60"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />

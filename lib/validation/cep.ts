@@ -75,7 +75,7 @@ export function validateCEP(cep: string): boolean {
  * @returns Error message string, or null if CEP is valid
  * 
  * @example
- * getCEPErrorMessage('123') // returns 'CEP must contain exactly 8 digits'
+ * getCEPErrorMessage('123') // returns 'CEP deve conter exatamente 8 dígitos'
  * getCEPErrorMessage('12345-678') // returns null
  */
 export function getCEPErrorMessage(cep: string): string | null {
@@ -83,7 +83,7 @@ export function getCEPErrorMessage(cep: string): string | null {
   
   // Check length
   if (sanitized.length !== 8) {
-    return 'CEP must contain exactly 8 digits';
+    return 'CEP deve conter exatamente 8 dígitos';
   }
   
   return null;

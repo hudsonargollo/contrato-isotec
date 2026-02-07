@@ -28,9 +28,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { contractDraftSchema } from '@/lib/types/schemas';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { WizardProgress } from '@/components/ui/wizard-progress';
-import { Container } from '@/components/ui/container';
 import { useKeyboardShortcuts, announce } from '@/components/ui/keyboard-navigation';
 import { SwipeGesture, MobileKeyboard } from '@/components/ui/mobile-interactions';
 
@@ -362,24 +361,6 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
             </MobileKeyboard>
           </form>
         </FormProvider>
-      </div>
-
-      {/* Mascot - Desktop Only */}
-      <div className="fixed bottom-8 right-8 hidden lg:block animate-float pointer-events-none">
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.5, type: 'spring' }}
-        >
-          <Image
-            src="/mascote.webp"
-            alt="ISOTEC Mascot"
-            width={100}
-            height={100}
-            loading="lazy"
-            className="drop-shadow-2xl"
-          />
-        </motion.div>
       </div>
     </div>
   );

@@ -306,20 +306,21 @@ describe('Hero Components', () => {
         <HeroMascot
           src="/test-mascot.webp"
           alt="Test Mascot"
-          width={120}
-          height={120}
+          width={200}
+          height={200}
         />
       );
 
       const mascot = screen.getByAltText('Test Mascot');
       
       expect(mascot).toHaveAttribute('src', '/test-mascot.webp');
-      expect(mascot).toHaveAttribute('width', '120');
-      expect(mascot).toHaveAttribute('height', '120');
+      expect(mascot).toHaveAttribute('width', '200');
+      expect(mascot).toHaveAttribute('height', '200');
       expect(mascot).toHaveClass('drop-shadow-2xl');
+      expect(mascot).toHaveClass('animate-float');
     });
 
-    it('renders with fixed positioning and responsive visibility', () => {
+    it('renders with absolute positioning within hero composition', () => {
       const { container } = render(
         <HeroMascot
           src="/test-mascot.webp"
@@ -328,12 +329,15 @@ describe('Hero Components', () => {
       );
 
       const mascotContainer = container.firstChild;
-      expect(mascotContainer).toHaveClass('fixed');
-      expect(mascotContainer).toHaveClass('bottom-8');
+      expect(mascotContainer).toHaveClass('absolute');
+      expect(mascotContainer).toHaveClass('bottom-0');
       expect(mascotContainer).toHaveClass('right-8');
+      expect(mascotContainer).toHaveClass('xl:right-16');
       expect(mascotContainer).toHaveClass('hidden');
       expect(mascotContainer).toHaveClass('lg:block');
-      expect(mascotContainer).toHaveClass('animate-float');
+      expect(mascotContainer).toHaveClass('animate-in');
+      expect(mascotContainer).toHaveClass('fade-in');
+      expect(mascotContainer).toHaveClass('slide-in-from-bottom-8');
     });
   });
 

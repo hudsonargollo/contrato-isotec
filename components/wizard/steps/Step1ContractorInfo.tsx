@@ -7,24 +7,36 @@
  */
 
 import { useFormContext } from 'react-hook-form';
-import { MobileFormField, MobileInputTypes, MobileForm } from '@/components/ui/mobile-form-field';
+import { MobileFormField, MobileInputTypes } from '@/components/ui/mobile-form-field';
 import { Label } from '@/components/ui/label';
-import { formatCPF } from '@/lib/validation/cpf';
 
 export function Step1ContractorInfo() {
   const {
     register,
     formState: { errors },
     setValue,
-    watch,
   } = useFormContext();
 
-  const cpfValue = watch('contractorCPF');
-
-  // Handle CPF formatting on blur
-  const handleCPFBlur = () => {
-    if (cpfValue) {
-      setValue('contractorCPF', formatCPF(cpfValue));
+  // Handle CPF formatting on change (not blur to avoid clearing)
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const sanitized = value.replace(/\D/g, ''); // Remove non-digits
+    
+    // Format as user types
+    let formatted = sanitized;
+    if (sanitized.length >= 3) {
+      formatted = sanitized.replace(/(\d{3})(\d{0,3})(\d{0,3})(\d{0,2})/, (_, p1, p2, p3, p4) => {
+        let result = p1;
+        if (p2) result += '.' + p2;
+        if (p3) result += '.' + p3;
+        if (p4) result += '-' + p4;
+        return result;
+      });
+    }
+    
+    // Limit to 14 characters (XXX.XXX.XXX-XX)
+    if (formatted.length <= 14) {
+      setValue('contractorCPF', formatted);
     }
   };
 
@@ -67,7 +79,7 @@ export function Step1ContractorInfo() {
             id="contractorCPF"
             {...register('contractorCPF')}
             placeholder="000.000.000-00"
-            onBlur={handleCPFBlur}
+            onChange={handleCPFChange}
             maxLength={14}
             className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
             autoComplete="off"

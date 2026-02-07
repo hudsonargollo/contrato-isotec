@@ -96,10 +96,10 @@ describe('CEP Validation Module', () => {
     });
 
     it('should return error message for CEP with wrong length', () => {
-      expect(getCEPErrorMessage('1234567')).toBe('CEP must contain exactly 8 digits');
-      expect(getCEPErrorMessage('123456789')).toBe('CEP must contain exactly 8 digits');
-      expect(getCEPErrorMessage('123')).toBe('CEP must contain exactly 8 digits');
-      expect(getCEPErrorMessage('')).toBe('CEP must contain exactly 8 digits');
+      expect(getCEPErrorMessage('1234567')).toBe('CEP deve conter exatamente 8 dígitos');
+      expect(getCEPErrorMessage('123456789')).toBe('CEP deve conter exatamente 8 dígitos');
+      expect(getCEPErrorMessage('123')).toBe('CEP deve conter exatamente 8 dígitos');
+      expect(getCEPErrorMessage('')).toBe('CEP deve conter exatamente 8 dígitos');
     });
   });
 

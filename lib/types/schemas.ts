@@ -30,27 +30,27 @@ const BRAZIL_BOUNDS = {
 export const coordinatesSchema = z.object({
   latitude: z
     .number()
-    .min(BRAZIL_BOUNDS.latitude.min, 'Latitude must be within Brazil boundaries')
-    .max(BRAZIL_BOUNDS.latitude.max, 'Latitude must be within Brazil boundaries')
+    .min(BRAZIL_BOUNDS.latitude.min, 'Latitude deve estar dentro dos limites do Brasil')
+    .max(BRAZIL_BOUNDS.latitude.max, 'Latitude deve estar dentro dos limites do Brasil')
     .refine(
       (val) => {
         // Ensure 8 decimal places precision
         const decimalPlaces = val.toString().split('.')[1]?.length || 0;
         return decimalPlaces <= 8;
       },
-      { message: 'Latitude must have at most 8 decimal places' }
+      { message: 'Latitude deve ter no máximo 8 casas decimais' }
     ),
   longitude: z
     .number()
-    .min(BRAZIL_BOUNDS.longitude.min, 'Longitude must be within Brazil boundaries')
-    .max(BRAZIL_BOUNDS.longitude.max, 'Longitude must be within Brazil boundaries')
+    .min(BRAZIL_BOUNDS.longitude.min, 'Longitude deve estar dentro dos limites do Brasil')
+    .max(BRAZIL_BOUNDS.longitude.max, 'Longitude deve estar dentro dos limites do Brasil')
     .refine(
       (val) => {
         // Ensure 8 decimal places precision
         const decimalPlaces = val.toString().split('.')[1]?.length || 0;
         return decimalPlaces <= 8;
       },
-      { message: 'Longitude must have at most 8 decimal places' }
+      { message: 'Longitude deve ter no máximo 8 casas decimais' }
     )
 });
 
@@ -61,9 +61,9 @@ export const coordinatesSchema = z.object({
  */
 export const cpfSchema = z
   .string()
-  .min(1, 'CPF is required')
+  .min(1, 'CPF é obrigatório')
   .refine(validateCPF, (val) => ({
-    message: getCPFErrorMessage(val) || 'Invalid CPF'
+    message: getCPFErrorMessage(val) || 'CPF inválido'
   }));
 
 /**
@@ -73,9 +73,9 @@ export const cpfSchema = z
  */
 export const cepSchema = z
   .string()
-  .min(1, 'CEP is required')
+  .min(1, 'CEP é obrigatório')
   .refine(validateCEP, (val) => ({
-    message: getCEPErrorMessage(val) || 'Invalid CEP'
+    message: getCEPErrorMessage(val) || 'CEP inválido'
   }));
 
 /**
@@ -85,14 +85,14 @@ export const cepSchema = z
  */
 export const positiveValueSchema = z
   .number()
-  .positive('Value must be greater than zero')
+  .positive('Valor deve ser maior que zero')
   .refine(
     (val) => {
       // Ensure 2 decimal places precision for currency
       const decimalPlaces = val.toString().split('.')[1]?.length || 0;
       return decimalPlaces <= 2;
     },
-    { message: 'Value must have at most 2 decimal places' }
+    { message: 'Valor deve ter no máximo 2 casas decimais' }
   );
 
 /**
@@ -101,7 +101,7 @@ export const positiveValueSchema = z
  * Validates: Requirements 1.7, 12.3, 12.4
  */
 export const serviceItemSchema = z.object({
-  description: z.string().min(1, 'Service description is required'),
+  description: z.string().min(1, 'Descrição do serviço é obrigatória'),
   included: z.boolean()
 });
 
@@ -111,9 +111,9 @@ export const serviceItemSchema = z.object({
  * Validates: Requirements 1.6, 12.1, 12.2
  */
 export const equipmentItemInputSchema = z.object({
-  itemName: z.string().min(1, 'Item name is required').max(200, 'Item name is too long'),
-  quantity: z.number().int('Quantity must be a whole number').positive('Quantity must be greater than zero'),
-  unit: z.string().min(1, 'Unit is required').max(20, 'Unit is too long'),
+  itemName: z.string().min(1, 'Nome do item é obrigatório').max(200, 'Nome do item é muito longo'),
+  quantity: z.number().int('Quantidade deve ser um número inteiro').positive('Quantidade deve ser maior que zero'),
+  unit: z.string().min(1, 'Unidade é obrigatória').max(20, 'Unidade é muito longa'),
   sortOrder: z.number().int().nonnegative().default(0)
 });
 
@@ -133,7 +133,7 @@ export const equipmentItemSchema = equipmentItemInputSchema.extend({
  * Validates: Requirements 13.3
  */
 export const paymentMethodSchema = z.enum(['pix', 'cash', 'credit'], {
-  errorMap: () => ({ message: 'Payment method must be PIX, cash, or credit' })
+  errorMap: () => ({ message: 'Método de pagamento deve ser PIX, dinheiro ou cartão' })
 });
 
 /**
@@ -141,7 +141,7 @@ export const paymentMethodSchema = z.enum(['pix', 'cash', 'credit'], {
  * Validates contract status values
  */
 export const contractStatusSchema = z.enum(['pending_signature', 'signed', 'cancelled'], {
-  errorMap: () => ({ message: 'Invalid contract status' })
+  errorMap: () => ({ message: 'Status do contrato inválido' })
 });
 
 /**
@@ -152,29 +152,29 @@ const contractDraftBaseSchema = z.object({
   // Contractor Information
   contractorName: z
     .string()
-    .min(3, 'Contractor name must be at least 3 characters')
-    .max(200, 'Contractor name is too long'),
+    .min(3, 'Nome do contratante deve ter pelo menos 3 caracteres')
+    .max(200, 'Nome do contratante é muito longo'),
   contractorCPF: cpfSchema,
   contractorEmail: z
     .string()
-    .email('Invalid email address')
+    .email('Endereço de e-mail inválido')
     .optional()
     .or(z.literal('')),
   contractorPhone: z
     .string()
-    .min(10, 'Phone number must be at least 10 digits')
-    .max(20, 'Phone number is too long')
+    .min(10, 'Telefone deve ter pelo menos 10 dígitos')
+    .max(20, 'Telefone é muito longo')
     .optional()
     .or(z.literal('')),
   
   // Installation Address
   addressCEP: cepSchema,
-  addressStreet: z.string().min(1, 'Street is required').max(200, 'Street is too long'),
-  addressNumber: z.string().min(1, 'Number is required').max(20, 'Number is too long'),
-  addressComplement: z.string().max(100, 'Complement is too long').optional().or(z.literal('')),
-  addressNeighborhood: z.string().min(1, 'Neighborhood is required').max(100, 'Neighborhood is too long'),
-  addressCity: z.string().min(1, 'City is required').max(100, 'City is too long'),
-  addressState: z.string().length(2, 'State must be 2 characters (e.g., SP, RJ)'),
+  addressStreet: z.string().min(1, 'Logradouro é obrigatório').max(200, 'Logradouro é muito longo'),
+  addressNumber: z.string().min(1, 'Número é obrigatório').max(20, 'Número é muito longo'),
+  addressComplement: z.string().max(100, 'Complemento é muito longo').optional().or(z.literal('')),
+  addressNeighborhood: z.string().min(1, 'Bairro é obrigatório').max(100, 'Bairro é muito longo'),
+  addressCity: z.string().min(1, 'Cidade é obrigatória').max(100, 'Cidade é muito longa'),
+  addressState: z.string().length(2, 'Estado deve ter 2 caracteres (ex: SP, RJ)'),
   
   // Geographic Location (optional but validated if provided)
   locationLatitude: z.number().optional(),
@@ -183,13 +183,13 @@ const contractDraftBaseSchema = z.object({
   // Project Specifications
   projectKWp: positiveValueSchema.refine(
     (val) => val <= 10000,
-    { message: 'Solar capacity seems unreasonably high' }
+    { message: 'Capacidade solar parece excessivamente alta' }
   ),
   installationDate: z.date().optional(),
   
   // Services and Equipment
-  services: z.array(serviceItemSchema).min(1, 'At least one service must be selected'),
-  items: z.array(equipmentItemInputSchema).min(1, 'At least one equipment item is required'),
+  services: z.array(serviceItemSchema).min(1, 'Pelo menos um serviço deve ser selecionado'),
+  items: z.array(equipmentItemInputSchema).min(1, 'Pelo menos um item de equipamento é obrigatório'),
   
   // Financial Information
   contractValue: positiveValueSchema,
@@ -210,7 +210,7 @@ export const contractDraftSchema = contractDraftBaseSchema.refine(
     return hasLat === hasLng;
   },
   {
-    message: 'Both latitude and longitude must be provided together',
+    message: 'Latitude e longitude devem ser fornecidas juntas',
     path: ['locationLatitude']
   }
 ).refine(
@@ -228,7 +228,7 @@ export const contractDraftSchema = contractDraftBaseSchema.refine(
     return true;
   },
   {
-    message: 'Coordinates must be within Brazil boundaries',
+    message: 'Coordenadas devem estar dentro dos limites do Brasil',
     path: ['locationLatitude']
   }
 );
@@ -255,7 +255,7 @@ export const contractSchema = contractDraftBaseSchema.extend({
     return hasLat === hasLng;
   },
   {
-    message: 'Both latitude and longitude must be provided together',
+    message: 'Latitude e longitude devem ser fornecidas juntas',
     path: ['locationLatitude']
   }
 ).refine(
@@ -273,7 +273,7 @@ export const contractSchema = contractDraftBaseSchema.extend({
     return true;
   },
   {
-    message: 'Coordinates must be within Brazil boundaries',
+    message: 'Coordenadas devem estar dentro dos limites do Brasil',
     path: ['locationLatitude']
   }
 );
@@ -286,14 +286,14 @@ export const auditLogEventTypeSchema = z.enum([
   'signature_completed',
   'signature_failed'
 ], {
-  errorMap: () => ({ message: 'Invalid audit log event type' })
+  errorMap: () => ({ message: 'Tipo de evento de auditoria inválido' })
 });
 
 /**
  * Signature Method Schema
  */
 export const signatureMethodSchema = z.enum(['govbr', 'email'], {
-  errorMap: () => ({ message: 'Signature method must be GOV.BR or email' })
+  errorMap: () => ({ message: 'Método de assinatura deve ser GOV.BR ou e-mail' })
 });
 
 /**
@@ -306,9 +306,9 @@ export const auditLogSchema = z.object({
   contractId: z.string().uuid(),
   eventType: auditLogEventTypeSchema,
   signatureMethod: signatureMethodSchema,
-  contractHash: z.string().min(64, 'Contract hash must be SHA-256 (64 characters)'),
+  contractHash: z.string().min(64, 'Hash do contrato deve ter 64 caracteres (SHA-256)'),
   signerIdentifier: z.string().optional(),
-  ipAddress: z.string().ip('Invalid IP address'),
+  ipAddress: z.string().ip('Endereço IP inválido'),
   userAgent: z.string().optional(),
   createdAt: z.date()
 });
@@ -322,7 +322,7 @@ export const signatureResultSchema = z.object({
   success: z.boolean(),
   contractId: z.string().uuid(),
   signedAt: z.date(),
-  contractHash: z.string().min(64, 'Contract hash must be SHA-256 (64 characters)'),
+  contractHash: z.string().min(64, 'Hash do contrato deve ter 64 caracteres (SHA-256)'),
   error: z.string().optional()
 });
 
@@ -357,7 +357,7 @@ export const addressDataSchema = z.object({
  * Validates Google Maps configuration
  */
 export const googleMapsConfigSchema = z.object({
-  apiKey: z.string().min(1, 'Google Maps API key is required'),
+  apiKey: z.string().min(1, 'Chave da API do Google Maps é obrigatória'),
   defaultCenter: coordinatesSchema,
   defaultZoom: z.number().int().min(1).max(21)
 });
@@ -397,8 +397,8 @@ export const adminUserSchema = z.object({
  * Validates: Requirements 5.1
  */
 export const emailVerificationRequestSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  contractId: z.string().uuid('Invalid contract ID')
+  email: z.string().email('Endereço de e-mail inválido'),
+  contractId: z.string().uuid('ID do contrato inválido')
 });
 
 /**
@@ -407,8 +407,8 @@ export const emailVerificationRequestSchema = z.object({
  * Validates: Requirements 5.2
  */
 export const emailVerificationCodeSchema = z.object({
-  code: z.string().length(6, 'Verification code must be 6 digits').regex(/^\d{6}$/, 'Verification code must be numeric'),
-  contractId: z.string().uuid('Invalid contract ID')
+  code: z.string().length(6, 'Código de verificação deve ter 6 dígitos').regex(/^\d{6}$/, 'Código de verificação deve ser numérico'),
+  contractId: z.string().uuid('ID do contrato inválido')
 });
 
 /**

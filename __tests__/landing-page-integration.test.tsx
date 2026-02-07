@@ -41,12 +41,15 @@ describe('Landing Page Integration', () => {
     const mascotContainer = mascotImage.parentElement;
     
     expect(mascotContainer).toHaveClass(
-      'fixed',
-      'bottom-8', 
+      'absolute',
+      'bottom-0', 
       'right-8',
+      'xl:right-16',
       'hidden',
       'lg:block',
-      'animate-float'
+      'animate-in',
+      'fade-in',
+      'slide-in-from-bottom-8'
     );
   });
 
@@ -56,5 +59,6 @@ describe('Landing Page Integration', () => {
     const mascotImage = screen.getByAltText('ISOTEC Mascot');
     expect(mascotImage).toHaveAttribute('src', expect.stringContaining('mascote.webp'));
     expect(mascotImage).toHaveClass('drop-shadow-2xl');
+    expect(mascotImage).toHaveClass('animate-float');
   });
 });

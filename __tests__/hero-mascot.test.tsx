@@ -16,7 +16,7 @@ describe('HeroMascot', () => {
     expect(mascotImage).toHaveAttribute('src', expect.stringContaining('mascote.webp'));
   });
 
-  it('has correct positioning classes', () => {
+  it('has correct positioning classes for hero composition', () => {
     const { container } = render(
       <HeroMascot
         src="/mascote.webp"
@@ -25,7 +25,17 @@ describe('HeroMascot', () => {
     );
 
     const mascotContainer = container.firstChild as HTMLElement;
-    expect(mascotContainer).toHaveClass('fixed', 'bottom-8', 'right-8', 'hidden', 'lg:block', 'animate-float');
+    expect(mascotContainer).toHaveClass(
+      'absolute', 
+      'bottom-0', 
+      'right-8', 
+      'xl:right-16',
+      'hidden', 
+      'lg:block', 
+      'animate-in',
+      'fade-in',
+      'slide-in-from-bottom-8'
+    );
   });
 
   it('applies custom className when provided', () => {
@@ -46,17 +56,17 @@ describe('HeroMascot', () => {
       <HeroMascot
         src="/mascote.webp"
         alt="ISOTEC Mascot"
-        width={160}
-        height={160}
+        width={240}
+        height={240}
       />
     );
 
     const mascotImage = screen.getByAltText('ISOTEC Mascot');
-    expect(mascotImage).toHaveAttribute('width', '160');
-    expect(mascotImage).toHaveAttribute('height', '160');
+    expect(mascotImage).toHaveAttribute('width', '240');
+    expect(mascotImage).toHaveAttribute('height', '240');
   });
 
-  it('has drop shadow styling', () => {
+  it('has drop shadow styling and float animation', () => {
     render(
       <HeroMascot
         src="/mascote.webp"
@@ -66,5 +76,19 @@ describe('HeroMascot', () => {
 
     const mascotImage = screen.getByAltText('ISOTEC Mascot');
     expect(mascotImage).toHaveClass('drop-shadow-2xl');
+    expect(mascotImage).toHaveClass('animate-float');
+  });
+
+  it('has responsive sizing classes', () => {
+    render(
+      <HeroMascot
+        src="/mascote.webp"
+        alt="ISOTEC Mascot"
+      />
+    );
+
+    const mascotImage = screen.getByAltText('ISOTEC Mascot');
+    expect(mascotImage).toHaveClass('w-48');
+    expect(mascotImage).toHaveClass('xl:w-60');
   });
 });
