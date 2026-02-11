@@ -6,6 +6,12 @@
 // Re-export Zod schemas and their inferred types
 export * from './schemas';
 
+// Re-export CRM types
+export * from './crm';
+
+// Re-export Invoice types
+export * from './invoice';
+
 // Contract Types
 export interface Contract {
   id: string;

@@ -1,346 +1,690 @@
 /**
- * Email Service using SMTP (Turbocloud/Nodemailer)
- * 
- * Provides email sending functionality for:
- * - Verification codes for contract signatures
- * - Contract notifications
- * - Admin notifications
- * 
- * Uses Nodemailer with SMTP (Turbocloud or any SMTP provider)
- * 
- * Requirements: 5.1
+ * Email Service
+ * Handles email delivery for invoices and notifications
+ * Requirements: 4.4 - Automated invoice delivery via email
  */
 
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import { createClient } from '@/lib/supabase/client';
+import { TenantContext } from '@/lib/types/tenant';
 
-/**
- * Create SMTP transporter
- */
-function createTransporter() {
-  // Check if SMTP is configured
-  if (!process.env.SMTP_HOST) {
-    console.warn('SMTP not configured - emails will be logged to console');
-    return null;
+export interface EmailTemplate {
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType: string;
+}
+
+export interface SendEmailOptions {
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  subject: string;
+  html: string;
+  text?: string;
+  attachments?: EmailAttachment[];
+  replyTo?: string;
+  tags?: Record<string, string>;
+}
+
+export interface EmailDeliveryResult {
+  id: string;
+  status: 'sent' | 'failed';
+  messageId?: string;
+  error?: string;
+  deliveredTo: string[];
+  failedRecipients?: Array<{
+    email: string;
+    error: string;
+  }>;
+}
+
+export class EmailService {
+  private resend: Resend;
+  private supabase = createClient();
+
+  constructor() {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is required');
+    }
+    this.resend = new Resend(apiKey);
   }
 
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '465'),
-    secure: process.env.SMTP_SECURE !== 'false', // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      // Remove quotes if present (for passwords with special chars like #)
-      pass: process.env.SMTP_PASS?.replace(/^["']|["']$/g, ''),
-    },
-  });
-}
-
-/**
- * Email template for verification code
- */
-function getVerificationEmailTemplate(code: string, contractorName: string): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Código de Verificação - ISOTEC</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .header {
-      text-align: center;
-      padding: 20px 0;
-      border-bottom: 3px solid #f59e0b;
-    }
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: #f59e0b;
-    }
-    .content {
-      padding: 30px 0;
-    }
-    .code-box {
-      background: #f3f4f6;
-      border: 2px solid #f59e0b;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .code {
-      font-size: 32px;
-      font-weight: bold;
-      letter-spacing: 8px;
-      color: #1f2937;
-      font-family: 'Courier New', monospace;
-    }
-    .warning {
-      background: #fef3c7;
-      border-left: 4px solid #f59e0b;
-      padding: 12px;
-      margin: 20px 0;
-    }
-    .footer {
-      text-align: center;
-      padding: 20px 0;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo">⚡ ISOTEC</div>
-    <p>Soluções em Energia Solar</p>
-  </div>
-  
-  <div class="content">
-    <h2>Código de Verificação</h2>
-    <p>Olá${contractorName ? `, ${contractorName}` : ''}!</p>
-    <p>Use o código abaixo para assinar digitalmente seu contrato de instalação fotovoltaica:</p>
-    
-    <div class="code-box">
-      <div class="code">${code}</div>
-    </div>
-    
-    <div class="warning">
-      <strong>⚠️ Importante:</strong>
-      <ul style="margin: 10px 0; padding-left: 20px;">
-        <li>Este código expira em <strong>15 minutos</strong></li>
-        <li>Não compartilhe este código com ninguém</li>
-        <li>Se você não solicitou este código, ignore este email</li>
-      </ul>
-    </div>
-    
-    <p>Ao assinar o contrato, você concorda com os termos e condições especificados no documento.</p>
-    
-    <p style="margin-top: 30px;">
-      <strong>Dúvidas?</strong><br>
-      Entre em contato conosco através do nosso site ou telefone.
-    </p>
-  </div>
-  
-  <div class="footer">
-    <p>ISOTEC - Soluções em Energia Solar Fotovoltaica</p>
-    <p>Este é um email automático, por favor não responda.</p>
-  </div>
-</body>
-</html>
-  `.trim();
-}
-
-/**
- * Send verification code email
- * 
- * @param to Recipient email address
- * @param code 6-digit verification code
- * @param contractorName Contractor's name (optional)
- * @returns Success status
- */
-export async function sendVerificationEmail(
-  to: string,
-  code: string,
-  contractorName?: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const transporter = createTransporter();
-    
-    // Development mode or SMTP not configured - log to console
-    if (!transporter || process.env.NODE_ENV === 'development') {
-      console.log('\n=== EMAIL SENT ===');
-      console.log('To:', to);
-      console.log('Subject: Código de Verificação - ISOTEC');
-      console.log('Code:', code);
-      if (contractorName) {
-        console.log('Contractor:', contractorName);
-      }
-      console.log('Template: HTML email with ISOTEC branding');
-      console.log('==================\n');
-      
-      return { success: true };
-    }
-
-    // Production mode - send actual email via SMTP
-    const mailOptions = {
-      from: {
-        name: process.env.SMTP_FROM_NAME || 'ISOTEC',
-        address: process.env.SMTP_FROM || 'noreply@isotec.com.br',
-      },
-      to,
-      subject: 'Código de Verificação - ISOTEC',
-      html: getVerificationEmailTemplate(code, contractorName || ''),
-      text: `Seu código de verificação é: ${code}\n\nEste código expira em 15 minutos.`,
-    };
-
-    await transporter.sendMail(mailOptions);
-    
-    console.log(`Verification email sent to ${to}`);
-    return { success: true };
-    
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to send email',
-    };
-  }
-}
-
-/**
- * Send contract signed notification
- * 
- * @param to Recipient email address
- * @param contractUuid Contract UUID for viewing
- * @param contractorName Contractor's name
- * @returns Success status
- */
-/**
- * Send contract signed notification with PDF attachment
- * 
- * @param to Recipient email address
- * @param contractUuid Contract UUID for viewing
- * @param contractorName Contractor's name
- * @returns Success status
- */
-export async function sendContractSignedNotification(
-  to: string,
-  contractUuid: string,
-  contractorName: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const transporter = createTransporter();
-    const contractUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/contracts/${contractUuid}`;
-    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/contracts/${contractUuid}/pdf`;
-    
-    // Development mode or SMTP not configured - log to console
-    if (!transporter || process.env.NODE_ENV === 'development') {
-      console.log('\n=== CONTRACT SIGNED EMAIL ===');
-      console.log('To:', to);
-      console.log('Contractor:', contractorName);
-      console.log('Contract URL:', contractUrl);
-      console.log('PDF URL:', pdfUrl);
-      console.log('Template: HTML confirmation email with PDF attachment');
-      console.log('=============================\n');
-      
-      return { success: true };
-    }
-
-    // Fetch PDF content for attachment
-    let pdfAttachment = null;
+  /**
+   * Send email with optional attachments
+   */
+  async sendEmail(
+    options: SendEmailOptions,
+    context: TenantContext
+  ): Promise<EmailDeliveryResult> {
     try {
-      const pdfResponse = await fetch(pdfUrl);
-      if (pdfResponse.ok) {
-        const pdfBuffer = await pdfResponse.arrayBuffer();
-        pdfAttachment = {
-          filename: `contrato-${contractUuid}.pdf`,
-          content: Buffer.from(pdfBuffer),
-          contentType: 'application/pdf'
-        };
+      // Get tenant information for from address
+      const tenant = await this.getTenantInfo(context.tenant_id);
+      const fromAddress = tenant?.email || process.env.DEFAULT_FROM_EMAIL || 'noreply@solarcrm.clubemkt.digital';
+      const fromName = tenant?.name || 'SolarCRM Pro';
+
+      // Send email via Resend
+      const { data, error } = await this.resend.emails.send({
+        from: `${fromName} <${fromAddress}>`,
+        to: options.to,
+        cc: options.cc,
+        bcc: options.bcc,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        attachments: options.attachments?.map(att => ({
+          filename: att.filename,
+          content: att.content,
+          contentType: att.contentType
+        })),
+        replyTo: options.replyTo,
+        tags: options.tags
+      });
+
+      if (error) {
+        throw new Error(`Email delivery failed: ${error.message}`);
       }
-    } catch (pdfError) {
-      console.error('Error fetching PDF for email attachment:', pdfError);
-      // Continue without PDF attachment
+
+      // Log email delivery
+      await this.logEmailDelivery({
+        tenant_id: context.tenant_id,
+        user_id: context.user_id,
+        message_id: data?.id || '',
+        recipients: options.to,
+        subject: options.subject,
+        status: 'sent',
+        provider: 'resend',
+        metadata: {
+          cc: options.cc,
+          bcc: options.bcc,
+          tags: options.tags
+        }
+      });
+
+      return {
+        id: data?.id || '',
+        status: 'sent',
+        messageId: data?.id,
+        deliveredTo: options.to
+      };
+
+    } catch (error) {
+      // Log failed delivery
+      await this.logEmailDelivery({
+        tenant_id: context.tenant_id,
+        user_id: context.user_id,
+        message_id: '',
+        recipients: options.to,
+        subject: options.subject,
+        status: 'failed',
+        provider: 'resend',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        metadata: {
+          cc: options.cc,
+          bcc: options.bcc,
+          tags: options.tags
+        }
+      });
+
+      return {
+        id: '',
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        deliveredTo: [],
+        failedRecipients: options.to.map(email => ({
+          email,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }))
+      };
+    }
+  }
+
+  /**
+   * Send invoice email with PDF attachment
+   */
+  async sendInvoiceEmail(
+    invoiceId: string,
+    recipients: string[],
+    template: EmailTemplate,
+    pdfBuffer: Buffer,
+    context: TenantContext,
+    options?: {
+      includePaymentLink?: boolean;
+      customMessage?: string;
+      cc?: string[];
+      bcc?: string[];
+    }
+  ): Promise<EmailDeliveryResult> {
+    const attachments: EmailAttachment[] = [
+      {
+        filename: `invoice-${invoiceId}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }
+    ];
+
+    // Add payment link to template if requested
+    let emailHtml = template.html;
+    if (options?.includePaymentLink) {
+      const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL}/invoices/${invoiceId}/pay`;
+      emailHtml = emailHtml.replace(
+        '{{payment_link}}',
+        `<a href="${paymentLink}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0;">Pay Invoice</a>`
+      );
     }
 
-    // Production mode - send actual email via SMTP
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Contrato Assinado - ISOTEC</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="text-align: center; padding: 20px 0; border-bottom: 3px solid #10b981;">
-    <h1 style="color: #10b981; margin: 0;">✓ Contrato Assinado</h1>
-  </div>
-  
-  <div style="padding: 30px 0;">
-    <p>Olá, ${contractorName}!</p>
-    <p>Seu contrato de instalação fotovoltaica foi assinado com sucesso!</p>
-    
-    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
-      <p style="margin: 0 0 15px 0;">Você pode visualizar seu contrato a qualquer momento:</p>
-      <a href="${contractUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-        Ver Contrato Online
-      </a>
-    </div>
-    
-    ${pdfAttachment ? `
-    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0;">
-      <p style="margin: 0;"><strong>📎 Anexo:</strong> O contrato completo em PDF está anexado a este email para sua conveniência.</p>
-    </div>
-    ` : ''}
-    
-    <p><strong>Próximos passos:</strong></p>
-    <ol>
-      <li>Nossa equipe entrará em contato para agendar a instalação</li>
-      <li>Você receberá atualizações sobre o progresso do projeto</li>
-      <li>Mantenha este email e o PDF anexo para referência futura</li>
-    </ol>
-    
-    <p style="margin-top: 30px;">Obrigado por escolher a ISOTEC!</p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
-    <p>ISOTEC - Soluções em Energia Solar Fotovoltaica</p>
-  </div>
-</body>
-</html>
-    `.trim();
+    // Add custom message if provided
+    if (options?.customMessage) {
+      emailHtml = emailHtml.replace(
+        '{{custom_message}}',
+        `<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;"><p><strong>Message:</strong></p><p>${options.customMessage}</p></div>`
+      );
+    }
 
-    const mailOptions: any = {
-      from: {
-        name: process.env.SMTP_FROM_NAME || 'ISOTEC',
-        address: process.env.SMTP_FROM || 'noreply@isotec.com.br',
+    return await this.sendEmail({
+      to: recipients,
+      cc: options?.cc,
+      bcc: options?.bcc,
+      subject: template.subject,
+      html: emailHtml,
+      text: template.text,
+      attachments,
+      tags: {
+        type: 'invoice',
+        invoice_id: invoiceId
+      }
+    }, context);
+  }
+
+  /**
+   * Send invoice approval notification
+   */
+  async sendApprovalNotification(
+    invoiceId: string,
+    approverEmails: string[],
+    template: EmailTemplate,
+    context: TenantContext
+  ): Promise<EmailDeliveryResult> {
+    return await this.sendEmail({
+      to: approverEmails,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      tags: {
+        type: 'approval_notification',
+        invoice_id: invoiceId
+      }
+    }, context);
+  }
+
+  /**
+   * Send invoice status update notification
+   */
+  async sendStatusUpdateNotification(
+    invoiceId: string,
+    recipients: string[],
+    template: EmailTemplate,
+    context: TenantContext
+  ): Promise<EmailDeliveryResult> {
+    return await this.sendEmail({
+      to: recipients,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      tags: {
+        type: 'status_update',
+        invoice_id: invoiceId
+      }
+    }, context);
+  }
+
+  /**
+   * Send payment confirmation
+   */
+  async sendPaymentConfirmation(
+    invoiceId: string,
+    customerEmail: string,
+    template: EmailTemplate,
+    context: TenantContext
+  ): Promise<EmailDeliveryResult> {
+    return await this.sendEmail({
+      to: [customerEmail],
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      tags: {
+        type: 'payment_confirmation',
+        invoice_id: invoiceId
+      }
+    }, context);
+  }
+
+  /**
+   * Get email delivery status from provider
+   */
+  async getDeliveryStatus(messageId: string): Promise<{
+    status: 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained' | 'failed';
+    timestamp?: Date;
+    details?: any;
+  }> {
+    try {
+      // Note: Resend doesn't provide a direct API to get email status
+      // This would need to be implemented via webhooks
+      // For now, return basic status
+      return {
+        status: 'sent',
+        timestamp: new Date()
+      };
+    } catch (error) {
+      return {
+        status: 'failed',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      };
+    }
+  }
+
+  /**
+   * Validate email addresses
+   */
+  validateEmailAddresses(emails: string[]): {
+    valid: string[];
+    invalid: Array<{ email: string; reason: string }>;
+  } {
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    const valid: string[] = [];
+    const invalid: Array<{ email: string; reason: string }> = [];
+
+    emails.forEach(email => {
+      const trimmedEmail = email.trim().toLowerCase();
+      
+      if (!trimmedEmail) {
+        invalid.push({ email, reason: 'Empty email address' });
+      } else if (!emailRegex.test(trimmedEmail)) {
+        invalid.push({ email, reason: 'Invalid email format' });
+      } else if (trimmedEmail.length > 254) {
+        invalid.push({ email, reason: 'Email address too long' });
+      } else {
+        valid.push(trimmedEmail);
+      }
+    });
+
+    return { valid, invalid };
+  }
+
+  /**
+   * Create email templates for different invoice scenarios
+   */
+  createInvoiceEmailTemplate(
+    invoice: any,
+    templateType: 'new_invoice' | 'reminder' | 'overdue' | 'payment_received',
+    tenantName: string,
+    customMessage?: string
+  ): EmailTemplate {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const invoiceUrl = `${baseUrl}/invoices/${invoice.id}`;
+    const paymentUrl = `${baseUrl}/invoices/${invoice.id}/pay`;
+
+    const templates = {
+      new_invoice: {
+        subject: `Invoice ${invoice.invoice_number} from ${tenantName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #f8f9fa; padding: 20px; text-align: center;">
+              <h1 style="color: #333; margin: 0;">New Invoice</h1>
+            </div>
+            
+            <div style="padding: 20px;">
+              <p>Dear ${invoice.customer_name},</p>
+              
+              <p>We have generated a new invoice for you:</p>
+              
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Invoice Number:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.invoice_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Amount:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.currency} ${invoice.total_amount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Due Date:</strong></td>
+                    <td style="padding: 5px 0;">${new Date(invoice.due_date).toLocaleDateString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Payment Terms:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.payment_terms}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              {{custom_message}}
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${invoiceUrl}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 10px;">View Invoice</a>
+                {{payment_link}}
+              </div>
+              
+              <p>The invoice is attached to this email as a PDF.</p>
+              
+              <p>If you have any questions, please don't hesitate to contact us.</p>
+              
+              <p>Best regards,<br>${tenantName}</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+              <p>This is an automated message. Please do not reply to this email.</p>
+            </div>
+          </div>
+        `,
+        text: `
+          New Invoice from ${tenantName}
+          
+          Dear ${invoice.customer_name},
+          
+          We have generated a new invoice for you:
+          
+          Invoice Number: ${invoice.invoice_number}
+          Amount: ${invoice.currency} ${invoice.total_amount.toFixed(2)}
+          Due Date: ${new Date(invoice.due_date).toLocaleDateString()}
+          Payment Terms: ${invoice.payment_terms}
+          
+          ${customMessage ? `Message: ${customMessage}` : ''}
+          
+          View Invoice: ${invoiceUrl}
+          Pay Invoice: ${paymentUrl}
+          
+          The invoice is attached to this email as a PDF.
+          
+          If you have any questions, please don't hesitate to contact us.
+          
+          Best regards,
+          ${tenantName}
+        `
       },
-      to,
-      subject: 'Contrato Assinado - ISOTEC (PDF Anexo)',
-      html,
-      text: `Olá, ${contractorName}!\n\nSeu contrato foi assinado com sucesso!\n\nVisualize em: ${contractUrl}\n\n${pdfAttachment ? 'O contrato em PDF está anexado a este email.' : ''}`,
+      
+      reminder: {
+        subject: `Payment Reminder: Invoice ${invoice.invoice_number}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #fff3cd; padding: 20px; text-align: center;">
+              <h1 style="color: #856404; margin: 0;">Payment Reminder</h1>
+            </div>
+            
+            <div style="padding: 20px;">
+              <p>Dear ${invoice.customer_name},</p>
+              
+              <p>This is a friendly reminder that your invoice is due soon:</p>
+              
+              <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Invoice Number:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.invoice_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Amount Due:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #856404;">${invoice.currency} ${invoice.total_amount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Due Date:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold;">${new Date(invoice.due_date).toLocaleDateString()}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              {{custom_message}}
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${invoiceUrl}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 10px;">View Invoice</a>
+                {{payment_link}}
+              </div>
+              
+              <p>Please ensure payment is made by the due date to avoid any late fees.</p>
+              
+              <p>Thank you for your prompt attention to this matter.</p>
+              
+              <p>Best regards,<br>${tenantName}</p>
+            </div>
+          </div>
+        `,
+        text: `
+          Payment Reminder - Invoice ${invoice.invoice_number}
+          
+          Dear ${invoice.customer_name},
+          
+          This is a friendly reminder that your invoice is due soon:
+          
+          Invoice Number: ${invoice.invoice_number}
+          Amount Due: ${invoice.currency} ${invoice.total_amount.toFixed(2)}
+          Due Date: ${new Date(invoice.due_date).toLocaleDateString()}
+          
+          ${customMessage ? `Message: ${customMessage}` : ''}
+          
+          View Invoice: ${invoiceUrl}
+          Pay Invoice: ${paymentUrl}
+          
+          Please ensure payment is made by the due date to avoid any late fees.
+          
+          Thank you for your prompt attention to this matter.
+          
+          Best regards,
+          ${tenantName}
+        `
+      },
+      
+      overdue: {
+        subject: `OVERDUE: Invoice ${invoice.invoice_number} - Immediate Action Required`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #f8d7da; padding: 20px; text-align: center;">
+              <h1 style="color: #721c24; margin: 0;">Invoice Overdue</h1>
+            </div>
+            
+            <div style="padding: 20px;">
+              <p>Dear ${invoice.customer_name},</p>
+              
+              <p><strong>Your invoice is now overdue and requires immediate attention:</strong></p>
+              
+              <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Invoice Number:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.invoice_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Amount Due:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #721c24; font-size: 18px;">${invoice.currency} ${invoice.total_amount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Original Due Date:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #721c24;">${new Date(invoice.due_date).toLocaleDateString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Days Overdue:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #721c24;">${Math.ceil((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24))} days</td>
+                  </tr>
+                </table>
+              </div>
+              
+              {{custom_message}}
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${invoiceUrl}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 10px;">View Invoice</a>
+                {{payment_link}}
+              </div>
+              
+              <p><strong>Please make payment immediately to avoid additional late fees and potential service interruption.</strong></p>
+              
+              <p>If you have already made payment, please disregard this notice. If you have any questions or need to discuss payment arrangements, please contact us immediately.</p>
+              
+              <p>Best regards,<br>${tenantName}</p>
+            </div>
+          </div>
+        `,
+        text: `
+          OVERDUE INVOICE - Immediate Action Required
+          
+          Dear ${invoice.customer_name},
+          
+          Your invoice is now overdue and requires immediate attention:
+          
+          Invoice Number: ${invoice.invoice_number}
+          Amount Due: ${invoice.currency} ${invoice.total_amount.toFixed(2)}
+          Original Due Date: ${new Date(invoice.due_date).toLocaleDateString()}
+          Days Overdue: ${Math.ceil((Date.now() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24))} days
+          
+          ${customMessage ? `Message: ${customMessage}` : ''}
+          
+          View Invoice: ${invoiceUrl}
+          Pay Invoice: ${paymentUrl}
+          
+          Please make payment immediately to avoid additional late fees and potential service interruption.
+          
+          If you have already made payment, please disregard this notice. If you have any questions or need to discuss payment arrangements, please contact us immediately.
+          
+          Best regards,
+          ${tenantName}
+        `
+      },
+      
+      payment_received: {
+        subject: `Payment Received: Invoice ${invoice.invoice_number}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #d4edda; padding: 20px; text-align: center;">
+              <h1 style="color: #155724; margin: 0;">Payment Received</h1>
+            </div>
+            
+            <div style="padding: 20px;">
+              <p>Dear ${invoice.customer_name},</p>
+              
+              <p>Thank you! We have received your payment for the following invoice:</p>
+              
+              <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Invoice Number:</strong></td>
+                    <td style="padding: 5px 0;">${invoice.invoice_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Amount Paid:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #155724;">${invoice.currency} ${invoice.total_amount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Payment Date:</strong></td>
+                    <td style="padding: 5px 0;">${new Date().toLocaleDateString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0;"><strong>Status:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #155724;">PAID</td>
+                  </tr>
+                </table>
+              </div>
+              
+              {{custom_message}}
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${invoiceUrl}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">View Receipt</a>
+              </div>
+              
+              <p>Your payment has been processed and your account has been updated accordingly.</p>
+              
+              <p>Thank you for your business!</p>
+              
+              <p>Best regards,<br>${tenantName}</p>
+            </div>
+          </div>
+        `,
+        text: `
+          Payment Received - Invoice ${invoice.invoice_number}
+          
+          Dear ${invoice.customer_name},
+          
+          Thank you! We have received your payment for the following invoice:
+          
+          Invoice Number: ${invoice.invoice_number}
+          Amount Paid: ${invoice.currency} ${invoice.total_amount.toFixed(2)}
+          Payment Date: ${new Date().toLocaleDateString()}
+          Status: PAID
+          
+          ${customMessage ? `Message: ${customMessage}` : ''}
+          
+          View Receipt: ${invoiceUrl}
+          
+          Your payment has been processed and your account has been updated accordingly.
+          
+          Thank you for your business!
+          
+          Best regards,
+          ${tenantName}
+        `
+      }
     };
 
-    // Add PDF attachment if available
-    if (pdfAttachment) {
-      mailOptions.attachments = [pdfAttachment];
+    return templates[templateType];
+  }
+
+  /**
+   * Private helper methods
+   */
+
+  private async getTenantInfo(tenantId: string): Promise<{ name: string; email?: string } | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('tenants')
+        .select('name, settings')
+        .eq('id', tenantId)
+        .single();
+
+      if (error || !data) return null;
+
+      return {
+        name: data.name,
+        email: data.settings?.email
+      };
+    } catch (error) {
+      console.error('Failed to get tenant info:', error);
+      return null;
     }
+  }
 
-    await transporter.sendMail(mailOptions);
-    
-    console.log(`Contract signed notification sent to ${to}${pdfAttachment ? ' with PDF attachment' : ''}`);
-    return { success: true };
-    
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to send notification',
-    };
+  private async logEmailDelivery(data: {
+    tenant_id: string;
+    user_id: string;
+    message_id: string;
+    recipients: string[];
+    subject: string;
+    status: 'sent' | 'failed';
+    provider: string;
+    error_message?: string;
+    metadata?: any;
+  }): Promise<void> {
+    try {
+      await this.supabase
+        .from('email_logs')
+        .insert({
+          tenant_id: data.tenant_id,
+          user_id: data.user_id,
+          message_id: data.message_id,
+          recipients: data.recipients,
+          subject: data.subject,
+          status: data.status,
+          provider: data.provider,
+          error_message: data.error_message,
+          metadata: data.metadata || {}
+        });
+    } catch (error) {
+      console.error('Failed to log email delivery:', error);
+    }
   }
 }
 
-/**
- * Configuration for email service
- * 
- * To use a third-party service, add these environment variables:
- * - EMAIL_SERVICE_PROVIDER: 'sendgrid' | 'ses' | 'resend' | 'smtp'
- * - EMAIL_API_KEY: API key for the service
- * - EMAIL_FROM: Sender email address
- * - EMAIL_FROM_NAME: Sender name
- */
-export const emailConfig = {
-  provider: process.env.EMAIL_SERVICE_PROVIDER || 'console',
-  apiKey: process.env.EMAIL_API_KEY,
-  from: process.env.EMAIL_FROM || 'noreply@isotec.com.br',
-  fromName: process.env.EMAIL_FROM_NAME || 'ISOTEC',
-};
+export const emailService = new EmailService();

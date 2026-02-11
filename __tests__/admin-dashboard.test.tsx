@@ -39,6 +39,29 @@ jest.mock('@/components/ui/admin-layout', () => ({
   )
 }));
 
+// Mock the AdminAuthWrapper to bypass authentication
+jest.mock('@/components/ui/admin-auth-wrapper', () => ({
+  AdminAuthWrapper: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="admin-auth-wrapper">{children}</div>
+  )
+}));
+
+// Mock Supabase client
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: jest.fn(() => ({
+    auth: {
+      getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null })
+    },
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({ data: null, error: null })
+        }))
+      }))
+    }))
+  }))
+}));
+
 describe('AdminDashboard', () => {
   const mockUseDashboardStats = require('@/lib/hooks/use-dashboard-stats').useDashboardStats;
   const mockUseDashboardActivity = require('@/lib/hooks/use-dashboard-activity').useDashboardActivity;

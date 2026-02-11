@@ -25,7 +25,7 @@ const customJestConfig = {
     '!**/.next/**',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(@react-pdf)/)',
+    'node_modules/(?!(@react-pdf|@great-detail/whatsapp)/)',
   ],
 };
 
