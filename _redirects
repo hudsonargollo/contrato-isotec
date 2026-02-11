@@ -1,0 +1,14 @@
+# Cloudflare Pages Redirects Configuration
+
+# Redirect old ISOTEC URLs to new SolarCRM Pro structure
+/isotec/* /admin/:splat 301
+/contrato/* /contracts/:splat 301
+
+# API versioning redirects
+/api/v1.0/* /api/v1/:splat 301
+
+# Ensure HTTPS
+http://solarcrm-pro.pages.dev/* https://solarcrm-pro.pages.dev/:splat 301
+
+# SPA fallback for client-side routing
+/* /index.html 200

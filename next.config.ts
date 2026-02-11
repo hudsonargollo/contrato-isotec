@@ -6,6 +6,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
+  // Output configuration for Cloudflare Pages
+  output: 'export',
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   /* config options here */
   reactStrictMode: true,
   images: {
@@ -21,6 +25,11 @@ const nextConfig: NextConfig = {
   },
   // Enable compression for better performance
   compress: true,
+  
+  // Cloudflare Pages optimization
+  poweredByHeader: false,
+  generateEtags: false,
+  
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],

@@ -1,0 +1,36 @@
+# Cloudflare Pages Configuration for SolarCRM Pro
+name = "solarcrm-pro"
+compatibility_date = "2024-02-11"
+
+# Pages configuration
+[env.production]
+compatibility_date = "2024-02-11"
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "."
+
+# Environment variables (set these in Cloudflare dashboard)
+# NEXT_PUBLIC_SUPABASE_URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY  
+# SUPABASE_SERVICE_ROLE_KEY
+# NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+# GOVBR_CLIENT_ID
+# GOVBR_CLIENT_SECRET
+# GOVBR_REDIRECT_URI
+# SMTP_HOST
+# SMTP_PORT
+# SMTP_SECURE
+# SMTP_USER
+# SMTP_PASS
+# SMTP_FROM
+# SMTP_FROM_NAME
+# NEXT_PUBLIC_APP_URL
+# STRIPE_SECRET_KEY
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+# STRIPE_WEBHOOK_SECRET
+# WHATSAPP_ACCESS_TOKEN
+# WHATSAPP_PHONE_NUMBER_ID
+# WHATSAPP_BUSINESS_ACCOUNT_ID
+# WHATSAPP_WEBHOOK_VERIFY_TOKEN
