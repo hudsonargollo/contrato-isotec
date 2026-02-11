@@ -1050,5 +1050,3 @@ export function createWhatsAppService(tenantId: string): WhatsAppService {
 
   return new WhatsAppService(config);
 }
-
-export { WhatsAppService };
