@@ -45,15 +45,18 @@ export interface EmailDeliveryResult {
 }
 
 export class EmailService {
-  private resend: Resend;
+  private resend: Resend | null = null;
   private supabase = createClient();
 
-  constructor() {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      throw new Error('RESEND_API_KEY environment variable is required');
+  private ensureResend(): Resend {
+    if (!this.resend) {
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        throw new Error('RESEND_API_KEY environment variable is required');
+      }
+      this.resend = new Resend(apiKey);
     }
-    this.resend = new Resend(apiKey);
+    return this.resend;
   }
 
   /**
@@ -70,7 +73,8 @@ export class EmailService {
       const fromName = tenant?.name || 'SolarCRM Pro';
 
       // Send email via Resend
-      const { data, error } = await this.resend.emails.send({
+      const resend = this.ensureResend();
+      const { data, error } = await resend.emails.send({
         from: `${fromName} <${fromAddress}>`,
         to: options.to,
         cc: options.cc,

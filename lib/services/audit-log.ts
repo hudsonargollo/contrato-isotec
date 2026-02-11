@@ -337,7 +337,10 @@ export async function verifyAuditLogHash(
 }
 // Export a default audit logger instance
 export const auditLogger = {
+  log: createAuditLog,
   createAuditLog,
-  getAuditLogs,
+  getAuditLogsForContract,
+  getLatestAuditLog,
+  getAuditLogsByEventType,
   verifyAuditLogHash
 };

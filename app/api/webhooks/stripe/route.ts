@@ -13,9 +13,16 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { getAutomatedBillingService } from '@/lib/services/automated-billing';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20'
-});
+// Helper function to ensure Stripe is initialized
+function ensureStripe(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY not found in environment variables');
+  }
+  return new Stripe(secretKey, {
+    apiVersion: '2024-06-20'
+  });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,6 +44,7 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature
     let event: Stripe.Event;
     try {
+      const stripe = ensureStripe();
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
@@ -364,6 +372,7 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
     }
 
     // Get payment method details from Stripe
+    const stripe = ensureStripe();
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
     // Store payment method in database

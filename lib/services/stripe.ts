@@ -9,11 +9,17 @@ import { TenantContext } from '@/lib/types/tenant';
 import { Invoice, PaymentRecord, CreatePaymentRecordRequest } from '@/lib/types/invoice';
 import { invoiceService } from './invoice';
 
-// Initialize Stripe with API key from environment
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-  typescript: true,
-});
+// Helper function to ensure Stripe is initialized
+function ensureStripe(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY not found in environment variables');
+  }
+  return new Stripe(secretKey, {
+    apiVersion: '2024-12-18.acacia',
+    typescript: true,
+  });
+}
 
 export interface StripePaymentIntentRequest {
   invoice_id: string;
@@ -78,6 +84,8 @@ export class StripeService {
     context: TenantContext
   ): Promise<Stripe.Customer> {
     try {
+      const stripe = ensureStripe();
+      
       // First, try to find existing customer by email
       const existingCustomers = await stripe.customers.list({
         email: request.email,
@@ -130,6 +138,7 @@ export class StripeService {
     context: TenantContext
   ): Promise<StripePaymentIntentResponse> {
     try {
+      const stripe = ensureStripe();
       // Get invoice details
       const invoice = await invoiceService.getInvoice(request.invoice_id, context);
       if (!invoice) {
@@ -196,6 +205,7 @@ export class StripeService {
    */
   async getPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
     try {
+      const stripe = ensureStripe();
       return await stripe.paymentIntents.retrieve(paymentIntentId);
     } catch (error) {
       throw new Error(`Failed to retrieve payment intent: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -210,6 +220,7 @@ export class StripeService {
     paymentMethodId?: string
   ): Promise<Stripe.PaymentIntent> {
     try {
+      const stripe = ensureStripe();
       const confirmData: Stripe.PaymentIntentConfirmParams = {};
       
       if (paymentMethodId) {
@@ -227,6 +238,7 @@ export class StripeService {
    */
   async cancelPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
     try {
+      const stripe = ensureStripe();
       return await stripe.paymentIntents.cancel(paymentIntentId);
     } catch (error) {
       throw new Error(`Failed to cancel payment intent: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -392,6 +404,8 @@ export class StripeService {
     };
 
     try {
+      const stripe = ensureStripe();
+      
       // Get payment intents from Stripe
       const listParams: Stripe.PaymentIntentListParams = {
         limit: 100,
@@ -444,6 +458,7 @@ export class StripeService {
     metadata?: Record<string, string>
   ): Promise<Stripe.Refund> {
     try {
+      const stripe = ensureStripe();
       const paymentIntent = await this.getPaymentIntent(paymentIntentId);
       
       if (!paymentIntent.charges.data.length) {
@@ -472,6 +487,7 @@ export class StripeService {
    */
   async getCustomerPaymentMethods(customerId: string): Promise<Stripe.PaymentMethod[]> {
     try {
+      const stripe = ensureStripe();
       const paymentMethods = await stripe.paymentMethods.list({
         customer: customerId,
         type: 'card',
@@ -488,6 +504,7 @@ export class StripeService {
    */
   verifyWebhookSignature(payload: string, signature: string): StripeWebhookEvent {
     try {
+      const stripe = ensureStripe();
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
       return stripe.webhooks.constructEvent(payload, signature, endpointSecret) as StripeWebhookEvent;
     } catch (error) {

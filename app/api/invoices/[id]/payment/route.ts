@@ -8,9 +8,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-});
+// Helper function to ensure Stripe is initialized
+function ensureStripe(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY not found in environment variables');
+  }
+  return new Stripe(secretKey, {
+    apiVersion: '2024-06-20',
+  });
+}
 
 interface PaymentRequest {
   payment_method: string;
@@ -182,6 +189,8 @@ export async function POST(
 
 async function processStripePayment(invoice: any, amount: number) {
   try {
+    const stripe = ensureStripe();
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
