@@ -12,10 +12,23 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getUsageBillingService } from './usage-billing';
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Initialize Stripe with proper error handling
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  console.warn('STRIPE_SECRET_KEY not found in environment variables');
+}
+
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2024-06-20'
-});
+}) : null;
+
+// Helper function to ensure Stripe is available
+function ensureStripe(): Stripe {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+  }
+  return stripe;
+}
 
 // Payment Method Schema
 export const paymentMethodSchema = z.object({

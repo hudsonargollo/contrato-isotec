@@ -406,3 +406,18 @@ export const DEFAULT_SIGNATURE_FIELDS: SignatureField[] = [
     }
   }
 ];
+// Template population utility function
+export function populateTemplate(
+  template: string,
+  variables: Record<string, any>
+): string {
+  let populatedTemplate = template;
+  
+  // Replace template variables with actual values
+  Object.entries(variables).forEach(([key, value]) => {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+    populatedTemplate = populatedTemplate.replace(regex, String(value || ''));
+  });
+  
+  return populatedTemplate;
+}

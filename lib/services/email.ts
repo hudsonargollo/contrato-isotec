@@ -688,3 +688,37 @@ export class EmailService {
 }
 
 export const emailService = new EmailService();
+// Export specific email functions for backward compatibility
+export async function sendVerificationEmail(
+  email: string,
+  verificationCode: string,
+  context: TenantContext
+): Promise<EmailDeliveryResult> {
+  return await emailService.sendEmail({
+    to: [email],
+    subject: 'Código de Verificação - SolarCRM Pro',
+    html: `
+      <h2>Código de Verificação</h2>
+      <p>Seu código de verificação é: <strong>${verificationCode}</strong></p>
+      <p>Este código expira em 10 minutos.</p>
+    `,
+    text: `Seu código de verificação é: ${verificationCode}. Este código expira em 10 minutos.`
+  }, context);
+}
+
+export async function sendContractSignedNotification(
+  email: string,
+  contractId: string,
+  context: TenantContext
+): Promise<EmailDeliveryResult> {
+  return await emailService.sendEmail({
+    to: [email],
+    subject: 'Contrato Assinado - SolarCRM Pro',
+    html: `
+      <h2>Contrato Assinado com Sucesso</h2>
+      <p>O contrato ${contractId} foi assinado com sucesso.</p>
+      <p>Você pode visualizar o contrato em sua área do cliente.</p>
+    `,
+    text: `O contrato ${contractId} foi assinado com sucesso. Você pode visualizar o contrato em sua área do cliente.`
+  }, context);
+}

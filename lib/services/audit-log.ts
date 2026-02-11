@@ -335,3 +335,9 @@ export async function verifyAuditLogHash(
   
   return data !== null && data.length > 0;
 }
+// Export a default audit logger instance
+export const auditLogger = {
+  createAuditLog,
+  getAuditLogs,
+  verifyAuditLogHash
+};
