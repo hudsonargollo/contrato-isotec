@@ -1,15 +1,10 @@
 # Cloudflare Pages Configuration for SolarCRM Pro
-name = "solarcrm-pro"
+name = "contrato-isotec"
 compatibility_date = "2024-02-11"
 
 # Pages configuration
 [env.production]
 compatibility_date = "2024-02-11"
-
-# Build configuration
-[build]
-command = "npm run build"
-cwd = "."
 
 # Environment variables (set these in Cloudflare dashboard)
 # NEXT_PUBLIC_SUPABASE_URL
