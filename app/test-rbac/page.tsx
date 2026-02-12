@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,15 @@ import { UserRole, PERMISSIONS } from '@/lib/types/tenant';
 export const dynamic = 'force-dynamic';
 
 export default function RBACTestPage() {
+  const [mounted, setMounted] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'permissions'>('overview');
+
+  // Ensure component is mounted before accessing hooks
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const {
     userRole,
     permissions,
@@ -38,17 +47,22 @@ export default function RBACTestPage() {
   } = useRBAC();
 
   const { canInviteUsers, canViewUsers, canUpdateUsers, canDeleteUsers } = useUserManagement();
-  
-  const [testResults, setTestResults] = useState<Record<string, any>>({});
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'permissions'>('overview');
 
   // Test permission checking
   const testPermissionCheck = async (permission: string) => {
-    const result = await checkPermission(permission);
-    setTestResults(prev => ({
-      ...prev,
-      [permission]: result
-    }));
+    try {
+      const result = await checkPermission(permission);
+      setTestResults(prev => ({
+        ...prev,
+        [permission]: result
+      }));
+    } catch (err) {
+      console.error('Error checking permission:', err);
+      setTestResults(prev => ({
+        ...prev,
+        [permission]: false
+      }));
+    }
   };
 
   // Test permissions to check
@@ -69,7 +83,8 @@ export default function RBACTestPage() {
     'billing.manage'
   ];
 
-  if (isLoading) {
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -79,6 +94,10 @@ export default function RBACTestPage() {
       </div>
     );
   }
+
+  // Safely get permissions array with fallback
+  const safePermissions = Array.isArray(permissions) ? permissions : [];
+  const safeTestResults = testResults || {};
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -145,7 +164,7 @@ export default function RBACTestPage() {
               </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">Permissões</div>
-                <div className="text-sm">{permissions?.length || 0} permissões</div>
+                <div className="text-sm">{safePermissions.length} permissões</div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">Nível de Acesso</div>
@@ -177,7 +196,7 @@ export default function RBACTestPage() {
                     variant="outline"
                     onClick={() => testPermissionCheck(permission)}
                     className={`text-left justify-start ${
-                      hasPermission(permission) ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
+                      hasPermission && hasPermission(permission) ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
                     }`}
                   >
                     {permission}
@@ -188,7 +207,7 @@ export default function RBACTestPage() {
               <div className="pt-4 border-t">
                 <h3 className="font-medium mb-2">Resultados dos Testes:</h3>
                 <div className="space-y-1 text-sm">
-                  {Object.entries(testResults).map(([permission, result]) => (
+                  {Object.entries(safeTestResults).map(([permission, result]) => (
                     <div key={permission} className="flex justify-between">
                       <span>{permission}:</span>
                       <Badge variant={result ? 'default' : 'secondary'}>
@@ -241,8 +260,8 @@ export default function RBACTestPage() {
                   {(['viewer', 'user', 'manager', 'admin', 'owner'] as UserRole[]).map(role => (
                     <div key={role} className="flex justify-between">
                       <span>{role}:</span>
-                      <Badge variant={canManageUser(role) ? 'default' : 'secondary'}>
-                        {canManageUser(role) ? 'Pode gerenciar' : 'Não pode gerenciar'}
+                      <Badge variant={canManageUser && canManageUser(role) ? 'default' : 'secondary'}>
+                        {canManageUser && canManageUser(role) ? 'Pode gerenciar' : 'Não pode gerenciar'}
                       </Badge>
                     </div>
                   ))}
@@ -255,15 +274,16 @@ export default function RBACTestPage() {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Todas as Permissões do Usuário</h2>
             <div className="flex flex-wrap gap-2">
-              {permissions?.map((permission) => (
-                <Badge key={permission} variant="outline" className="text-xs">
-                  {permission}
-                </Badge>
-              )) || []}
+              {safePermissions.length > 0 ? (
+                safePermissions.map((permission) => (
+                  <Badge key={permission} variant="outline" className="text-xs">
+                    {permission}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-muted-foreground">Nenhuma permissão atribuída.</p>
+              )}
             </div>
-            {(!permissions || permissions.length === 0) && (
-              <p className="text-muted-foreground">Nenhuma permissão atribuída.</p>
-            )}
           </Card>
         </div>
       )}
@@ -279,7 +299,7 @@ export default function RBACTestPage() {
           <h2 className="text-xl font-semibold mb-4">Gerenciador de Permissões</h2>
           <PermissionManager
             currentRole={userRole || 'user'}
-            currentPermissions={permissions}
+            currentPermissions={safePermissions}
             readOnly={!isAdmin}
           />
         </Card>
