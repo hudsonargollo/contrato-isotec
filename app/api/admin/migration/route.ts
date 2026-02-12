@@ -10,34 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/middleware/api-auth';
 import { isotecMigrationService } from '@/lib/services/isotec-migration';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-
-// Lazy-loaded Supabase client to avoid build-time initialization
-async function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  // If environment variables are missing (during build), return a mock client
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return createMockSupabaseClient();
-  }
-  
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(supabaseUrl, supabaseServiceKey);
-}
-
-function createMockSupabaseClient() {
-  const mockQuery = {
-    select: () => mockQuery,
-    eq: () => mockQuery,
-    order: () => mockQuery,
-    range: () => mockQuery,
-  };
-
-  return {
-    from: () => mockQuery,
-  } as any;
-}
 
 // Request validation schemas
 const createMigrationJobSchema = z.object({
@@ -61,8 +35,8 @@ export const GET = withApiAuth(async (request, context) => {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Get migration jobs from database using lazy-loaded client
-    const supabase = await getSupabaseClient();
+    // Get migration jobs from database using centralized client
+    const supabase = createClient();
 
     let query = supabase
       .from('migration_jobs')
