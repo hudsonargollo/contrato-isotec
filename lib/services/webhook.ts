@@ -415,18 +415,20 @@ export function getWebhookService(): WebhookService {
 
 // Webhook event helpers
 export class WebhookEvents {
-  private static webhookService = getWebhookService();
+  private static getService(): WebhookService {
+    return getWebhookService();
+  }
 
   static async leadCreated(tenantId: string, lead: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'lead.created', { lead });
+    await this.getService().sendWebhook(tenantId, 'lead.created', { lead });
   }
 
   static async leadUpdated(tenantId: string, lead: any, changes: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'lead.updated', { lead, changes });
+    await this.getService().sendWebhook(tenantId, 'lead.updated', { lead, changes });
   }
 
   static async leadStatusChanged(tenantId: string, lead: any, oldStatus: string, newStatus: string): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'lead.status_changed', { 
+    await this.getService().sendWebhook(tenantId, 'lead.status_changed', { 
       lead, 
       old_status: oldStatus, 
       new_status: newStatus 
@@ -434,46 +436,46 @@ export class WebhookEvents {
   }
 
   static async contractGenerated(tenantId: string, contract: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'contract.generated', { contract });
+    await this.getService().sendWebhook(tenantId, 'contract.generated', { contract });
   }
 
   static async contractSigned(tenantId: string, contract: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'contract.signed', { contract });
+    await this.getService().sendWebhook(tenantId, 'contract.signed', { contract });
   }
 
   static async invoiceCreated(tenantId: string, invoice: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'invoice.created', { invoice });
+    await this.getService().sendWebhook(tenantId, 'invoice.created', { invoice });
   }
 
   static async invoicePaid(tenantId: string, invoice: any, payment: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'invoice.paid', { invoice, payment });
+    await this.getService().sendWebhook(tenantId, 'invoice.paid', { invoice, payment });
   }
 
   static async paymentSucceeded(tenantId: string, payment: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'payment.succeeded', { payment });
+    await this.getService().sendWebhook(tenantId, 'payment.succeeded', { payment });
   }
 
   static async paymentFailed(tenantId: string, payment: any, error: string): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'payment.failed', { payment, error });
+    await this.getService().sendWebhook(tenantId, 'payment.failed', { payment, error });
   }
 
   static async screeningCompleted(tenantId: string, screening: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'screening.completed', { screening });
+    await this.getService().sendWebhook(tenantId, 'screening.completed', { screening });
   }
 
   static async whatsappMessageSent(tenantId: string, message: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'whatsapp.message_sent', { message });
+    await this.getService().sendWebhook(tenantId, 'whatsapp.message_sent', { message });
   }
 
   static async whatsappMessageReceived(tenantId: string, message: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'whatsapp.message_received', { message });
+    await this.getService().sendWebhook(tenantId, 'whatsapp.message_received', { message });
   }
 
   static async userCreated(tenantId: string, user: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'user.created', { user });
+    await this.getService().sendWebhook(tenantId, 'user.created', { user });
   }
 
   static async tenantUpdated(tenantId: string, tenant: any, changes: any): Promise<void> {
-    await this.webhookService.sendWebhook(tenantId, 'tenant.updated', { tenant, changes });
+    await this.getService().sendWebhook(tenantId, 'tenant.updated', { tenant, changes });
   }
 }
