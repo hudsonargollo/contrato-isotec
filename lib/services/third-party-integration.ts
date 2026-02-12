@@ -7,13 +7,8 @@
  * Requirements: 10.2 - Third-party integrations and real-time data synchronization
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Integration service types
 export type IntegrationServiceType = 'crm' | 'email' | 'sms' | 'analytics' | 'storage' | 'payment' | 'other';
@@ -131,6 +126,7 @@ export class ThirdPartyIntegrationService {
     tenantId: string,
     config: IntegrationConfig
   ): Promise<ThirdPartyIntegration> {
+    const supabase = createClient();
     // Validate configuration
     const validatedConfig = IntegrationConfigSchema.parse(config);
 
@@ -176,6 +172,7 @@ export class ThirdPartyIntegrationService {
     integrationId: string,
     updates: Partial<IntegrationConfig>
   ): Promise<ThirdPartyIntegration> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('third_party_integrations')
       .update({
@@ -197,6 +194,7 @@ export class ThirdPartyIntegrationService {
    * Delete integration
    */
   async deleteIntegration(integrationId: string): Promise<void> {
+    const supabase = createClient();
     const { error } = await supabase
       .from('third_party_integrations')
       .delete()
@@ -211,6 +209,7 @@ export class ThirdPartyIntegrationService {
    * Get integrations for a tenant
    */
   async getIntegrations(tenantId: string): Promise<ThirdPartyIntegration[]> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('third_party_integrations')
       .select('*')
@@ -228,6 +227,7 @@ export class ThirdPartyIntegrationService {
    * Get integration by ID
    */
   async getIntegration(integrationId: string): Promise<ThirdPartyIntegration | null> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('third_party_integrations')
       .select('*')
@@ -287,6 +287,7 @@ export class ThirdPartyIntegrationService {
     entityId?: string,
     data?: Record<string, any>
   ): Promise<SyncOperation> {
+    const supabase = createClient();
     const integration = await this.getIntegration(integrationId);
     if (!integration) {
       throw new Error('Integration not found');
@@ -329,6 +330,7 @@ export class ThirdPartyIntegrationService {
    * Process sync operation
    */
   private async processSyncOperation(syncOpId: string): Promise<void> {
+    const supabase = createClient();
     // Update status to running
     await supabase
       .from('sync_operations')
@@ -428,6 +430,7 @@ export class ThirdPartyIntegrationService {
    * Record integration error
    */
   private async recordError(integrationId: string, errorMessage: string): Promise<void> {
+    const supabase = createClient();
     await supabase
       .from('third_party_integrations')
       .update({
@@ -448,6 +451,7 @@ export class ThirdPartyIntegrationService {
     limit: number = 50,
     offset: number = 0
   ): Promise<SyncOperation[]> {
+    const supabase = createClient();
     let query = supabase
       .from('sync_operations')
       .select('*')
