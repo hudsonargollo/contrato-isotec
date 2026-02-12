@@ -38,9 +38,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   generateEtags: false,
   
-  // Remove standalone output for Cloudflare Pages compatibility
-  // Cloudflare Pages handles the server-side rendering automatically
-  
   // Environment variables for build time
   env: {
     CF_PAGES: process.env.CF_PAGES || '',
