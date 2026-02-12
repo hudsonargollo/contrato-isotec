@@ -93,26 +93,32 @@ export async function signOut() {
 }
 
 /**
- * Sign up a new user with email and password
- * @param email User email
- * @param password User password
- * @param fullName User's full name
- * @returns Auth response
+ * Sign up a new tenant organization with owner user
+ * @param email Owner email
+ * @param password Owner password
+ * @param fullName Owner's full name
+ * @param tenantName Organization name
+ * @param tenantDomain Organization subdomain (optional)
+ * @returns Auth response with tenant creation
  */
-export async function signUpWithEmail(
+export async function signUpWithTenant(
   email: string, 
   password: string, 
-  fullName: string
+  fullName: string,
+  tenantName: string,
+  tenantDomain?: string
 ) {
   const supabase = createBrowserClient();
   
-  // Sign up the user
+  // Sign up the user first
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
+        tenant_name: tenantName,
+        tenant_domain: tenantDomain,
       },
     },
   });
@@ -121,22 +127,72 @@ export async function signUpWithEmail(
     return { data: null, error };
   }
   
-  // Create profile record
-  const { error: profileError } = await supabase
-    .from('profiles')
+  // Create tenant organization
+  const { data: tenant, error: tenantError } = await supabase
+    .from('tenants')
     .insert({
-      id: data.user.id,
-      email,
-      full_name: fullName,
-      role: 'admin', // Default role
-      mfa_enabled: false,
-    });
+      name: tenantName,
+      subdomain: tenantDomain || tenantName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      status: 'active',
+      subscription: {
+        plan: 'starter',
+        status: 'trial',
+        limits: {
+          users: 5,
+          leads: 1000,
+          contracts: 100,
+          storage_gb: 10
+        },
+        features: ['crm', 'screening', 'invoices']
+      },
+      settings: {
+        timezone: 'America/Sao_Paulo',
+        currency: 'BRL',
+        language: 'pt-BR',
+        date_format: 'DD/MM/YYYY',
+        notifications: {
+          email: true,
+          whatsapp: false,
+          sms: false
+        }
+      },
+      branding: {
+        logo_url: '',
+        primary_color: '#2563eb',
+        secondary_color: '#64748b',
+        custom_css: '',
+        white_label: false
+      }
+    })
+    .select()
+    .single();
   
-  if (profileError) {
-    return { data: null, error: profileError };
+  if (tenantError || !tenant) {
+    return { data: null, error: tenantError };
   }
   
-  return { data, error: null };
+  // Add user as tenant owner
+  const { error: tenantUserError } = await supabase
+    .from('tenant_users')
+    .insert({
+      tenant_id: tenant.id,
+      user_id: data.user.id,
+      role: 'owner',
+      permissions: ['*'], // Owner has all permissions
+      status: 'active'
+    });
+  
+  if (tenantUserError) {
+    return { data: null, error: tenantUserError };
+  }
+  
+  return { 
+    data: {
+      ...data,
+      tenant
+    }, 
+    error: null 
+  };
 }
 
 /**

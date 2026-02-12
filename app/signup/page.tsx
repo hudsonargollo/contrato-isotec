@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { signUpWithEmail } from '@/lib/supabase/auth';
+import { signUpWithTenant } from '@/lib/supabase/auth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -15,8 +15,7 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     fullName: '',
-    tenantName: '',
-    tenantDomain: ''
+    tenantName: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,7 @@ export default function SignupPage() {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password || !formData.fullName || !formData.tenantName) {
       setError('Todos os campos obrigatórios devem ser preenchidos');
       return false;
     }
@@ -67,15 +66,18 @@ export default function SignupPage() {
     }
 
     try {
-      const { data, error: signUpError } = await signUpWithEmail(
+      const { data, error: signUpError } = await signUpWithTenant(
         formData.email,
         formData.password,
-        formData.fullName
+        formData.fullName,
+        formData.tenantName
       );
 
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
           setError('Este email já está cadastrado');
+        } else if (signUpError.message.includes('subdomain')) {
+          setError('Nome da empresa já está em uso');
         } else {
           setError('Erro ao criar conta. Tente novamente.');
         }
@@ -111,10 +113,10 @@ export default function SignupPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">
-                Conta Criada com Sucesso!
+                Organização Criada com Sucesso!
               </h1>
               <p className="text-neutral-400 mb-6">
-                Verifique seu email para confirmar sua conta e fazer login.
+                Sua organização foi criada e você pode fazer login para começar a usar o SolarCRM Pro.
               </p>
               <p className="text-sm text-neutral-500">
                 Redirecionando para o login...
@@ -188,6 +190,24 @@ export default function SignupPage() {
                   required
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-solar-500 focus:border-transparent transition-all"
                   placeholder="seu@email.com"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Tenant Name */}
+              <div>
+                <label htmlFor="tenantName" className="block text-sm font-medium text-neutral-300 mb-2">
+                  Nome da Empresa *
+                </label>
+                <input
+                  id="tenantName"
+                  name="tenantName"
+                  type="text"
+                  value={formData.tenantName}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-solar-500 focus:border-transparent transition-all"
+                  placeholder="Nome da sua empresa"
                   disabled={loading}
                 />
               </div>
