@@ -11,7 +11,7 @@ import {
   verifyMFAChallenge 
 } from '@/lib/supabase/auth';
 
-// Force dynamic rendering
+// Force dynamic rendering to prevent static generation
 export const dynamic = 'force-dynamic';
 
 interface MFAFactor {
@@ -20,7 +20,7 @@ interface MFAFactor {
   status: string;
 }
 
-// Component that uses useSearchParams wrapped in Suspense
+// Client-only component that safely uses useSearchParams
 function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,12 +31,20 @@ function LoginContent() {
   const [mfaFactors, setMfaFactors] = useState<MFAFactor[]>([]);
   const [challengeId, setChallengeId] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [mounted, setMounted] = useState(false);
   
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Check for URL parameters
+  // Ensure component is mounted before accessing search params
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Check for URL parameters only after component is mounted
+  useEffect(() => {
+    if (!mounted) return;
+    
     const message = searchParams.get('message');
     const errorParam = searchParams.get('error');
     
@@ -49,7 +57,37 @@ function LoginContent() {
     } else if (errorParam === 'no_tenant_access') {
       setError('Você não tem acesso a este tenant.');
     }
-  }, [searchParams]);
+  }, [searchParams, mounted]);
+
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-ocean-900 via-ocean-800 to-neutral-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-solar-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-solar-600/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-24">
+          <div className="w-full max-w-md">
+            <div className="flex justify-center mb-8">
+              <Image
+                src="/isotec-logo.webp"
+                alt="ISOTEC Logo"
+                width={200}
+                height={80}
+                priority
+                className="w-48"
+              />
+            </div>
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-solar-500 mx-auto"></div>
+                <p className="text-neutral-400 mt-4">Carregando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
