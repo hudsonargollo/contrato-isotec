@@ -18,6 +18,9 @@ import UserManagement from '@/components/rbac/UserManagement';
 import PermissionManager from '@/components/rbac/PermissionManager';
 import { UserRole, PERMISSIONS } from '@/lib/types/tenant';
 
+// Force dynamic rendering for this test page since it uses authentication hooks
+export const dynamic = 'force-dynamic';
+
 export default function RBACTestPage() {
   const {
     userRole,
@@ -142,7 +145,7 @@ export default function RBACTestPage() {
               </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">Permissões</div>
-                <div className="text-sm">{permissions.length} permissões</div>
+                <div className="text-sm">{permissions?.length || 0} permissões</div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">Nível de Acesso</div>
@@ -252,13 +255,13 @@ export default function RBACTestPage() {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Todas as Permissões do Usuário</h2>
             <div className="flex flex-wrap gap-2">
-              {permissions.map((permission) => (
+              {permissions?.map((permission) => (
                 <Badge key={permission} variant="outline" className="text-xs">
                   {permission}
                 </Badge>
-              ))}
+              )) || []}
             </div>
-            {permissions.length === 0 && (
+            {(!permissions || permissions.length === 0) && (
               <p className="text-muted-foreground">Nenhuma permissão atribuída.</p>
             )}
           </Card>
