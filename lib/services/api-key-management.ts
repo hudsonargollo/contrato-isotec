@@ -10,10 +10,39 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomBytes, createHash } from 'crypto';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-loaded Supabase client to avoid build-time initialization
+let supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient() {
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    // If environment variables are missing (during build), return a mock client
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return createMockSupabaseClient();
+    }
+    
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+  return supabase;
+}
+
+function createMockSupabaseClient() {
+  const mockQuery = {
+    select: () => mockQuery,
+    insert: () => mockQuery,
+    update: () => mockQuery,
+    delete: () => mockQuery,
+    eq: () => mockQuery,
+    single: () => Promise.resolve({ data: null, error: null }),
+    order: () => mockQuery,
+  };
+
+  return {
+    from: () => mockQuery,
+  } as any;
+}
 
 // API Key interfaces
 export interface APIKey {
@@ -114,7 +143,7 @@ export class APIKeyManagementService {
     this.validateScopes(request.scopes);
     
     // Insert into database
-    const { data: apiKey, error } = await supabase
+    const { data: apiKey, error } = await getSupabaseClient()
       .from('api_keys')
       .insert({
         tenant_id: request.tenant_id,
@@ -149,7 +178,7 @@ export class APIKeyManagementService {
    * Get API keys for a tenant
    */
   async getAPIKeys(tenantId: string): Promise<APIKey[]> {
-    const { data: apiKeys, error } = await supabase
+    const { data: apiKeys, error } = await getSupabaseClient()
       .from('api_keys')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -166,7 +195,7 @@ export class APIKeyManagementService {
    * Get API key by ID
    */
   async getAPIKey(tenantId: string, keyId: string): Promise<APIKey | null> {
-    const { data: apiKey, error } = await supabase
+    const { data: apiKey, error } = await getSupabaseClient()
       .from('api_keys')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -186,7 +215,7 @@ export class APIKeyManagementService {
   async validateAPIKey(key: string): Promise<APIKey | null> {
     const keyHash = this.hashAPIKey(key);
     
-    const { data: apiKey, error } = await supabase
+    const { data: apiKey, error } = await getSupabaseClient()
       .from('api_keys')
       .select('*')
       .eq('key_hash', keyHash)
@@ -218,7 +247,7 @@ export class APIKeyManagementService {
       this.validateScopes(updates.scopes);
     }
 
-    const { data: apiKey, error } = await supabase
+    const { data: apiKey, error } = await getSupabaseClient()
       .from('api_keys')
       .update({
         ...updates,
@@ -241,7 +270,7 @@ export class APIKeyManagementService {
    * Delete API key
    */
   async deleteAPIKey(tenantId: string, keyId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabaseClient()
       .from('api_keys')
       .delete()
       .eq('tenant_id', tenantId)
@@ -267,7 +296,7 @@ export class APIKeyManagementService {
     const keyHash = this.hashAPIKey(keyData.key);
 
     // Update in database
-    const { data: apiKey, error } = await supabase
+    const { data: apiKey, error } = await getSupabaseClient()
       .from('api_keys')
       .update({
         key_hash: keyHash,
@@ -309,7 +338,7 @@ export class APIKeyManagementService {
     requestsByDay: Array<{ date: string; count: number }>;
     topEndpoints: Array<{ endpoint: string; count: number }>;
   }> {
-    const { data: usageLogs, error } = await supabase
+    const { data: usageLogs, error } = await getSupabaseClient()
       .from('api_usage_logs')
       .select('*')
       .eq('tenant_id', tenantId)

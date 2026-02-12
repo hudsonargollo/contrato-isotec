@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -15,7 +15,7 @@ export interface TenantContext {
  * and provides context for multi-tenant operations
  */
 export async function getTenantContext(): Promise<TenantContext> {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createSupabaseClient();
   
   const {
     data: { session },
@@ -99,7 +99,7 @@ export async function validateTenantAccess(
  */
 export async function getTenantSupabaseClient() {
   const context = await getTenantContext();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createSupabaseClient();
 
   // Set RLS context for tenant isolation
   await supabase.rpc('set_tenant_context', {
