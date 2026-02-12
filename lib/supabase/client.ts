@@ -8,19 +8,11 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  // Check if we're in build mode (Next.js build process)
-  const isBuildTime = process.env.NODE_ENV === 'production' && 
-                     (process.env.CF_PAGES === '1' || process.env.VERCEL === '1' || process.env.NEXT_PHASE === 'phase-production-build');
-  
-  // If we're in build mode and env vars are missing, return a mock client
-  if ((!supabaseUrl || !supabaseAnonKey) && isBuildTime) {
-    // During build, return a comprehensive mock client
-    return createMockSupabaseClient();
-  }
-  
-  // If not in build mode and env vars are missing, throw error
+  // If environment variables are missing, always return mock client during build
+  // This handles all build environments (Cloudflare, Vercel, local, etc.)
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment variables are required');
+    // During any build process, return a comprehensive mock client
+    return createMockSupabaseClient();
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey);

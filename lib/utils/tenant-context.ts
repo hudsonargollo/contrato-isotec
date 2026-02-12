@@ -8,7 +8,7 @@
  */
 
 import { headers } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { TenantService } from '@/lib/services/tenant';
 import { Tenant, TenantUser, TenantContext } from '@/lib/types/tenant';
@@ -32,29 +32,8 @@ export function getTenantSubdomain(): string | null {
 /**
  * Create Supabase client with tenant context
  */
-export function createTenantSupabaseClient() {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookies().getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookies().set(name, value, options)
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    }
-  );
+export async function createTenantSupabaseClient() {
+  const supabase = await createServerClient();
 
   // Set tenant context if available
   const tenantId = getTenantId();
@@ -84,7 +63,7 @@ export async function getCurrentTenantUser(): Promise<TenantUser | null> {
   const tenantId = getTenantId();
   if (!tenantId) return null;
 
-  const supabase = createTenantSupabaseClient();
+  const supabase = await createTenantSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -243,7 +222,7 @@ export async function requireFeature(feature: string): Promise<void> {
  * Get tenant-specific database client with RLS context
  */
 export async function getTenantDatabase() {
-  const supabase = createTenantSupabaseClient();
+  const supabase = await createTenantSupabaseClient();
   const tenantId = getTenantId();
 
   if (tenantId) {

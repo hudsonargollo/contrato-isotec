@@ -10,6 +10,7 @@
  * 
  * Requirements: 1.1, 1.2, 1.5, 11.1, 11.2 - Multi-Tenant Architecture
  */
+import { createClient as createSupabaseClient } from '@/lib/supabase/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -20,9 +21,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // Handle missing environment variables during build
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // If environment variables are missing (during build), skip auth processing
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

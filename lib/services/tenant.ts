@@ -7,7 +7,7 @@
  * Requirements: 1.1, 1.2, 1.5 - Multi-Tenant Architecture
  */
 
-import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { 
   Tenant, 
@@ -29,33 +29,21 @@ export class TenantService {
   private supabase;
 
   constructor() {
-    this.supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookies().getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookies().set(name, value, options)
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
+    // Use our centralized client that handles build-time mocking
+    this.supabase = null; // Will be initialized lazily
+  }
+
+  private async getSupabaseClient() {
+    if (!this.supabase) {
+      this.supabase = await createSupabaseClient();
+    }
+    return this.supabase;
   }
 
   // Tenant Management
   async createTenant(data: CreateTenant): Promise<Tenant> {
-    const { data: tenant, error } = await this.supabase
+    const supabase = await this.getSupabaseClient();
+    const { data: tenant, error } = await supabase
       .from('tenants')
       .insert({
         ...data,
@@ -74,7 +62,8 @@ export class TenantService {
   }
 
   async getTenant(id: string): Promise<Tenant | null> {
-    const { data: tenant, error } = await this.supabase
+    const supabase = await this.getSupabaseClient();
+    const { data: tenant, error } = await supabase
       .from('tenants')
       .select('*')
       .eq('id', id)
@@ -89,7 +78,7 @@ export class TenantService {
   }
 
   async getTenantByDomain(domain: string): Promise<Tenant | null> {
-    const { data: tenant, error } = await this.supabase
+    const { data: tenant, error } = await await this.getSupabaseClient()
       .from('tenants')
       .select('*')
       .eq('domain', domain)
@@ -104,7 +93,7 @@ export class TenantService {
   }
 
   async getTenantBySubdomain(subdomain: string): Promise<Tenant | null> {
-    const { data: tenant, error } = await this.supabase
+    const { data: tenant, error } = await await this.getSupabaseClient()
       .from('tenants')
       .select('*')
       .eq('subdomain', subdomain)
@@ -131,7 +120,7 @@ export class TenantService {
       updateData.settings = JSON.stringify(data.settings);
     }
 
-    const { data: tenant, error } = await this.supabase
+    const { data: tenant, error } = await await this.getSupabaseClient()
       .from('tenants')
       .update(updateData)
       .eq('id', id)
@@ -146,7 +135,7 @@ export class TenantService {
   }
 
   async deleteTenant(id: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await await this.getSupabaseClient()
       .from('tenants')
       .delete()
       .eq('id', id);
@@ -157,7 +146,7 @@ export class TenantService {
   }
 
   async listTenants(limit = 50, offset = 0): Promise<Tenant[]> {
-    const { data: tenants, error } = await this.supabase
+    const { data: tenants, error } = await await this.getSupabaseClient()
       .from('tenants')
       .select('*')
       .order('created_at', { ascending: false })
@@ -172,7 +161,7 @@ export class TenantService {
 
   // Tenant User Management
   async addUserToTenant(data: CreateTenantUser): Promise<TenantUser> {
-    const { data: tenantUser, error } = await this.supabase
+    const { data: tenantUser, error } = await await this.getSupabaseClient()
       .from('tenant_users')
       .insert({
         ...data,
@@ -195,7 +184,7 @@ export class TenantService {
       updateData.permissions = JSON.stringify(data.permissions);
     }
 
-    const { data: tenantUser, error } = await this.supabase
+    const { data: tenantUser, error } = await await this.getSupabaseClient()
       .from('tenant_users')
       .update(updateData)
       .eq('id', id)
@@ -210,7 +199,7 @@ export class TenantService {
   }
 
   async removeTenantUser(id: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await await this.getSupabaseClient()
       .from('tenant_users')
       .delete()
       .eq('id', id);
@@ -221,7 +210,7 @@ export class TenantService {
   }
 
   async getTenantUsers(tenantId: string): Promise<TenantUser[]> {
-    const { data: tenantUsers, error } = await this.supabase
+    const { data: tenantUsers, error } = await await this.getSupabaseClient()
       .from('tenant_users')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -236,7 +225,7 @@ export class TenantService {
   }
 
   async getUserTenants(userId: string): Promise<TenantUser[]> {
-    const { data: tenantUsers, error } = await this.supabase
+    const { data: tenantUsers, error } = await await this.getSupabaseClient()
       .from('tenant_users')
       .select(`
         *,
@@ -256,7 +245,7 @@ export class TenantService {
 
   async inviteUserToTenant(tenantId: string, data: InviteTenantUser, invitedBy: string): Promise<void> {
     // Check if user already exists
-    const { data: existingUser } = await this.supabase.auth.admin.getUserByEmail(data.email);
+    const { data: existingUser } = await await this.getSupabaseClient().auth.admin.getUserByEmail(data.email);
     
     if (existingUser.user) {
       // User exists, add them directly
@@ -273,7 +262,7 @@ export class TenantService {
       // User doesn't exist, create invitation
       // This would typically involve sending an email invitation
       // For now, we'll create a pending tenant user record
-      const { data: newUser, error: createError } = await this.supabase.auth.admin.createUser({
+      const { data: newUser, error: createError } = await await this.getSupabaseClient().auth.admin.createUser({
         email: data.email,
         email_confirm: false,
         user_metadata: {
@@ -304,7 +293,7 @@ export class TenantService {
 
   // Usage Tracking
   async trackUsage(tenantId: string, metric: UsageMetric, value = 1): Promise<void> {
-    const { error } = await this.supabase.rpc('update_tenant_usage', {
+    const { error } = await await this.getSupabaseClient().rpc('update_tenant_usage', {
       tenant_id_param: tenantId,
       metric_name_param: metric,
       increment_value: value
@@ -316,7 +305,7 @@ export class TenantService {
   }
 
   async getTenantUsage(tenantId: string, metric?: UsageMetric): Promise<TenantUsage[]> {
-    let query = this.supabase
+    let query = await this.getSupabaseClient()
       .from('tenant_usage')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -346,7 +335,7 @@ export class TenantService {
     currentMonth.setDate(1);
     currentMonth.setHours(0, 0, 0, 0);
 
-    const { data: usage, error } = await this.supabase
+    const { data: usage, error } = await await this.getSupabaseClient()
       .from('tenant_usage')
       .select('metric_name, metric_value')
       .eq('tenant_id', tenantId)
@@ -366,7 +355,7 @@ export class TenantService {
 
   // Subscription Management
   async checkLimit(tenantId: string, limitType: string): Promise<boolean> {
-    const { data, error } = await this.supabase.rpc('check_tenant_limit', {
+    const { data, error } = await await this.getSupabaseClient().rpc('check_tenant_limit', {
       tenant_id_param: tenantId,
       limit_type: limitType
     });
@@ -464,7 +453,7 @@ export class TenantService {
     // Get current tenant ID from context
     // This would typically be set by middleware based on domain/subdomain
     try {
-      const { data } = await this.supabase.rpc('get_current_tenant_id');
+      const { data } = await await this.getSupabaseClient().rpc('get_current_tenant_id');
       return data;
     } catch {
       return null;
