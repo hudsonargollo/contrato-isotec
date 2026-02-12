@@ -7,13 +7,8 @@
  * Requirements: 10.2 - Webhook system and third-party integrations
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Webhook event types
 export type WebhookEventType = 
@@ -92,6 +87,7 @@ export class WebhookService {
     events: WebhookEventType[],
     secret?: string
   ): Promise<WebhookEndpoint> {
+    const supabase = createClient();
     // Generate secret if not provided
     const webhookSecret = secret || this.generateSecret();
 
@@ -121,6 +117,7 @@ export class WebhookService {
     endpointId: string,
     updates: Partial<Pick<WebhookEndpoint, 'url' | 'events' | 'active'>>
   ): Promise<WebhookEndpoint> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('webhook_endpoints')
       .update({
@@ -142,6 +139,7 @@ export class WebhookService {
    * Delete webhook endpoint
    */
   async deleteEndpoint(endpointId: string): Promise<void> {
+    const supabase = createClient();
     const { error } = await supabase
       .from('webhook_endpoints')
       .delete()
@@ -156,6 +154,7 @@ export class WebhookService {
    * Get webhook endpoints for a tenant
    */
   async getEndpoints(tenantId: string): Promise<WebhookEndpoint[]> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('webhook_endpoints')
       .select('*')
@@ -178,6 +177,7 @@ export class WebhookService {
     data: Record<string, any>,
     metadata?: Record<string, any>
   ): Promise<void> {
+    const supabase = createClient();
     // Get active endpoints for this tenant and event type
     const { data: endpoints, error } = await supabase
       .from('webhook_endpoints')
@@ -217,6 +217,7 @@ export class WebhookService {
     endpoint: WebhookEndpoint,
     payload: WebhookPayload
   ): Promise<void> {
+    const supabase = createClient();
     // Create delivery record
     const { data: delivery, error: insertError } = await supabase
       .from('webhook_deliveries')
@@ -244,6 +245,7 @@ export class WebhookService {
    * Attempt webhook delivery
    */
   private async attemptDelivery(delivery: WebhookDelivery): Promise<void> {
+    const supabase = createClient();
     try {
       // Get endpoint details
       const { data: endpoint, error: endpointError } = await supabase
@@ -325,6 +327,7 @@ export class WebhookService {
    * Process webhook retries
    */
   async processRetries(): Promise<void> {
+    const supabase = createClient();
     const { data: deliveries, error } = await supabase
       .from('webhook_deliveries')
       .select('*')
@@ -350,6 +353,7 @@ export class WebhookService {
     limit: number = 50,
     offset: number = 0
   ): Promise<WebhookDelivery[]> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('webhook_deliveries')
       .select('*')
