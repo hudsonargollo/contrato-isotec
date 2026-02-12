@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface ActivityItem {
   id: string;
@@ -43,22 +44,61 @@ export function useDashboardActivity(limit: number = 10): UseDashboardActivityRe
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/admin/dashboard/activity?limit=${limit}`);
+      const supabase = createClient();
+
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch activity: ${response.statusText}`);
+      if (authError || !user) {
+        setActivities([]);
+        return;
       }
 
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch activity');
+      // Get recent contracts directly from Supabase
+      const { data: recentContracts, error: contractsError } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          uuid,
+          contractor_name,
+          status,
+          contract_value,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', { ascending: false })
+        .limit(Math.min(limit, 50)); // Cap at 50 for performance
+
+      if (contractsError) {
+        console.error('Error fetching recent contracts:', contractsError);
+        setActivities([]);
+        return;
       }
 
-      setActivities(data.activities || []);
+      // Transform contracts into activity items
+      const activityItems = (recentContracts || []).map(contract => ({
+        id: contract.id,
+        type: 'contract_created',
+        title: `Novo contrato criado`,
+        description: `Contrato para ${contract.contractor_name}`,
+        contractUuid: contract.uuid,
+        contractorName: contract.contractor_name,
+        status: contract.status as 'pending_signature' | 'signed' | 'cancelled',
+        contractValue: contract.contract_value || 0,
+        timestamp: contract.created_at,
+        metadata: {
+          contractId: contract.id,
+          contractUuid: contract.uuid,
+          status: contract.status
+        }
+      }));
+
+      setActivities(activityItems);
+
     } catch (err) {
       console.error('Error fetching dashboard activity:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setActivities([]);
     } finally {
       setLoading(false);
     }

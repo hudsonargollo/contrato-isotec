@@ -211,8 +211,9 @@ function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-neutral-900/95 backdrop-blur-sm border-r border-neutral-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 w-64 bg-neutral-900/95 backdrop-blur-sm border-r border-neutral-700 transform transition-transform duration-300 ease-in-out',
+          'lg:relative lg:translate-x-0 lg:z-auto',
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
         aria-label="Menu de navegação principal"
         role="navigation"
@@ -353,7 +354,7 @@ export function AdminLayout({ children, userInfo }: AdminLayoutProps) {
   const openSidebar = () => setSidebarOpen(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 flex">
       {/* Sidebar */}
       <Sidebar 
         isOpen={sidebarOpen} 
@@ -362,12 +363,12 @@ export function AdminLayout({ children, userInfo }: AdminLayoutProps) {
       />
 
       {/* Main content area */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col lg:ml-64">
         {/* Header */}
         <Header onMenuClick={openSidebar} userInfo={userInfo} />
 
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>

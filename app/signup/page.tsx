@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { signUpWithTenant } from '@/lib/supabase/auth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -66,26 +65,28 @@ export default function SignupPage() {
     }
 
     try {
-      const { data, error: signUpError } = await signUpWithTenant(
-        formData.email,
-        formData.password,
-        formData.fullName,
-        formData.tenantName
-      );
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          tenantName: formData.tenantName
+        }),
+      });
 
-      if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
-          setError('Este email já está cadastrado');
-        } else if (signUpError.message.includes('subdomain')) {
-          setError('Nome da empresa já está em uso');
-        } else {
-          setError('Erro ao criar conta. Tente novamente.');
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Erro ao criar conta. Tente novamente.');
         setLoading(false);
         return;
       }
 
-      if (data.user) {
+      if (data.success) {
         setSuccess(true);
         // Redirect to login after successful signup
         setTimeout(() => {

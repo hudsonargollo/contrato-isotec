@@ -128,11 +128,13 @@ export async function signUpWithTenant(
   }
   
   // Create tenant organization
+  const subdomain = tenantDomain || tenantName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
     .insert({
       name: tenantName,
-      subdomain: tenantDomain || tenantName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      domain: `${subdomain}.solarcrm.clubemkt.digital`,
+      subdomain: subdomain,
       status: 'active',
       subscription: {
         plan: 'starter',

@@ -15,7 +15,10 @@ export function Step1ContractorInfo() {
     register,
     formState: { errors },
     setValue,
+    watch,
   } = useFormContext();
+
+  const cpfValue = watch('contractorCPF') || '';
 
   // Handle CPF formatting on change (not blur to avoid clearing)
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +39,7 @@ export function Step1ContractorInfo() {
     
     // Limit to 14 characters (XXX.XXX.XXX-XX)
     if (formatted.length <= 14) {
-      setValue('contractorCPF', formatted);
+      setValue('contractorCPF', formatted, { shouldValidate: true });
     }
   };
 
@@ -75,12 +78,14 @@ export function Step1ContractorInfo() {
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
-          <MobileInputTypes.Number
+          <MobileFormField
             id="contractorCPF"
-            {...register('contractorCPF')}
+            name="contractorCPF"
+            value={cpfValue}
             placeholder="000.000.000-00"
             onChange={handleCPFChange}
             maxLength={14}
+            mobileKeyboardType="numeric"
             className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
             autoComplete="off"
           />

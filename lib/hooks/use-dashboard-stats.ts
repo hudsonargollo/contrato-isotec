@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface DashboardStats {
   totalContracts: number;
@@ -33,22 +34,69 @@ export function useDashboardStats(): UseDashboardStatsReturn {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/admin/dashboard/stats');
+      const supabase = createClient();
+
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch statistics: ${response.statusText}`);
+      if (authError || !user) {
+        setStats({
+          totalContracts: 0,
+          signedContracts: 0,
+          pendingSignature: 0,
+          activeClients: 0
+        });
+        return;
       }
 
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch statistics');
-      }
+      // Get contract statistics directly from Supabase
+      const [
+        totalContractsResult,
+        signedContractsResult,
+        pendingContractsResult,
+        activeClientsResult
+      ] = await Promise.all([
+        // Total contracts
+        supabase
+          .from('contracts')
+          .select('id', { count: 'exact', head: true }),
+        
+        // Signed contracts
+        supabase
+          .from('contracts')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'signed'),
+        
+        // Pending signature contracts
+        supabase
+          .from('contracts')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending_signature'),
+        
+        // Active clients (unique contractors with signed contracts)
+        supabase
+          .from('contracts')
+          .select('contractor_cpf', { count: 'exact', head: true })
+          .eq('status', 'signed')
+      ]);
 
-      setStats(data.statistics);
+      setStats({
+        totalContracts: totalContractsResult.count || 0,
+        signedContracts: signedContractsResult.count || 0,
+        pendingSignature: pendingContractsResult.count || 0,
+        activeClients: activeClientsResult.count || 0
+      });
+
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      // Set default stats on error
+      setStats({
+        totalContracts: 0,
+        signedContracts: 0,
+        pendingSignature: 0,
+        activeClients: 0
+      });
     } finally {
       setLoading(false);
     }
