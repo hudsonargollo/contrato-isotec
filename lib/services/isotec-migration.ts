@@ -7,13 +7,8 @@
  * Requirements: 11.1, 11.3 - Data migration and validation
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Legacy ISOTEC data structures
 export interface LegacyContract {
@@ -124,6 +119,7 @@ export class IsotecMigrationService {
     jobType: 'full' | 'incremental' | 'validation',
     configuration: Partial<MigrationJob['configuration']> = {}
   ): Promise<MigrationJob> {
+    const supabase = createClient();
     const defaultConfig = {
       batch_size: 100,
       parallel_workers: 2,
@@ -445,6 +441,7 @@ export class IsotecMigrationService {
     transformedData: any,
     results: MigrationResults
   ): Promise<void> {
+    const supabase = createClient();
     // Set tenant context
     await supabase.rpc('set_tenant_context', { tenant_id: tenantId });
 
@@ -494,6 +491,7 @@ export class IsotecMigrationService {
     tenantId: string,
     results: MigrationResults
   ): Promise<void> {
+    const supabase = createClient();
     // Verify record counts
     const { count: customerCount } = await supabase
       .from('customers')
@@ -531,6 +529,7 @@ export class IsotecMigrationService {
    * Get migration job by ID
    */
   async getMigrationJob(jobId: string): Promise<MigrationJob | null> {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('migration_jobs')
       .select('*')
@@ -552,6 +551,7 @@ export class IsotecMigrationService {
     status: MigrationJob['status'],
     currentPhase: string
   ): Promise<void> {
+    const supabase = createClient();
     const updates: any = {
       status,
       updated_at: new Date().toISOString()
@@ -584,6 +584,7 @@ export class IsotecMigrationService {
     status: MigrationJob['status'],
     results: MigrationResults
   ): Promise<void> {
+    const supabase = createClient();
     await supabase
       .from('migration_jobs')
       .update({
@@ -599,6 +600,7 @@ export class IsotecMigrationService {
    * Get job start time
    */
   private async getJobStartTime(jobId: string): Promise<Date | null> {
+    const supabase = createClient();
     const { data } = await supabase
       .from('migration_jobs')
       .select('started_at')
