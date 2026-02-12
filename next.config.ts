@@ -36,6 +36,15 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   generateEtags: false,
   
+  // Output configuration for Cloudflare Pages
+  output: 'standalone',
+  
+  // Disable cache for Cloudflare deployment to avoid large files
+  ...(process.env.CF_PAGES && {
+    distDir: '.next',
+    generateBuildId: () => 'build',
+  }),
+  
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
@@ -44,6 +53,12 @@ const nextConfig: NextConfig = {
   },
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
+    // Cloudflare Pages specific optimizations
+    if (process.env.CF_PAGES) {
+      // Disable webpack cache for Cloudflare deployment
+      config.cache = false;
+    }
+    
     // Production optimizations
     if (!dev && !isServer) {
       // Enable tree shaking
@@ -53,17 +68,20 @@ const nextConfig: NextConfig = {
       // Split chunks for better caching
       config.optimization.splitChunks = {
         chunks: 'all',
+        maxSize: 244000, // Keep chunks under 244KB for better performance
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             chunks: 'all',
+            maxSize: 244000,
           },
           common: {
             name: 'common',
             minChunks: 2,
             chunks: 'all',
             enforce: true,
+            maxSize: 244000,
           },
         },
       };

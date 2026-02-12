@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "CF_PAGES=1 next build && npm run cleanup:cache",
+    "cleanup:cache": "rm -rf .next/cache",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -12,8 +14,7 @@
     "cleanup:data": "tsx scripts/cleanup-expired-data.ts",
     "verify:db": "tsx scripts/verify-production-database.ts",
     "analyze": "ANALYZE=true npm run build",
-    "test:animations": "tsx scripts/test-animation-performance.ts",
-    "build:cf": "npm run build"
+    "test:animations": "tsx scripts/test-animation-performance.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",

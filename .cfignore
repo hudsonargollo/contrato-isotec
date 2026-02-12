@@ -14,3 +14,9 @@ node_modules/
 tests/
 *.test.ts
 *.test.tsx
+
+# Exclude Next.js cache files that exceed Cloudflare's 25MB limit
+.next/cache/
+.next/cache/**
+cache/
+cache/**
