@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -20,7 +20,8 @@ interface MFAFactor {
   status: string;
 }
 
-export default function LoginPage() {
+// Component that uses useSearchParams wrapped in Suspense
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
@@ -332,5 +333,39 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+// Main component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-br from-ocean-900 via-ocean-800 to-neutral-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-solar-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-solar-600/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-24">
+          <div className="w-full max-w-md">
+            <div className="flex justify-center mb-8">
+              <Image
+                src="/isotec-logo.webp"
+                alt="ISOTEC Logo"
+                width={200}
+                height={80}
+                priority
+                className="w-48"
+              />
+            </div>
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-solar-500 mx-auto"></div>
+                <p className="text-neutral-400 mt-4">Carregando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
