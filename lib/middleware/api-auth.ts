@@ -10,11 +10,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-loaded Supabase client to avoid build-time initialization
+let supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient() {
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    // If environment variables are missing (during build), return a mock client
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return createMockSupabaseClient();
+    }
+    
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+  return supabase;
+}
+
+function createMockSupabaseClient() {
+  const mockQuery = {
+    select: () => mockQuery,
+    eq: () => mockQuery,
+    single: () => Promise.resolve({ data: null, error: null }),
+  };
+
+  return {
+    from: () => mockQuery,
+  } as any;
+}
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -72,6 +96,7 @@ function extractApiKey(request: NextRequest): string | null {
  */
 async function authenticateJwt(token: string): Promise<AuthContext | null> {
   try {
+    const supabase = getSupabaseClient();
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
@@ -122,6 +147,7 @@ async function authenticateJwt(token: string): Promise<AuthContext | null> {
  */
 async function authenticateApiKey(apiKey: string): Promise<AuthContext | null> {
   try {
+    const supabase = getSupabaseClient();
     const { data: apiConfig, error } = await supabase
       .from('api_access_configs')
       .select(`
@@ -221,6 +247,7 @@ async function logApiUsage(
   ipAddress?: string
 ): Promise<void> {
   try {
+    const supabase = getSupabaseClient();
     await supabase.rpc('log_api_usage', {
       p_tenant_id: tenantId,
       p_api_key: apiKey,
