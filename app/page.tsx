@@ -1,6 +1,6 @@
 'use client';
 
-// Client component for landing page
+// SolarCRM Pro - Multi-tenant SaaS Landing Page
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -33,65 +33,110 @@ export default function Home() {
             {/* Logo */}
             <HeroLogo
               src="/isotec-logo.webp"
-              alt="ISOTEC Logo"
+              alt="SolarCRM Pro Logo"
             />
 
             {/* Main Content */}
             <main id="main-content">
               {/* Heading */}
               <HeroHeading>
-                Sistema de Contratos Fotovoltaicos
+                SolarCRM Pro
               </HeroHeading>
+              
+              <div className="text-solar-400 text-xl font-medium mb-4">
+                Plataforma SaaS Multi-tenant para Energia Solar
+              </div>
 
               {/* Description */}
               <HeroDescription>
-                Gestão completa de contratos para instalação de energia solar fotovoltaica. 
-                Crie, gerencie e assine contratos de forma digital e segura.
+                Plataforma completa de CRM, gestão de contratos, pagamentos e integração WhatsApp 
+                para empresas de energia solar fotovoltaica. Solução enterprise com arquitetura multi-tenant.
               </HeroDescription>
             </main>
 
             {/* CTA Buttons */}
             <HeroActions id="main-actions">
-              <Link href="/wizard">
-                <Button variant="primary" size="lg" className="px-8" aria-describedby="create-contract-desc">
-                  Criar Novo Contrato
+              <Link href="/signup">
+                <Button variant="primary" size="lg" className="px-8" aria-describedby="signup-desc">
+                  Começar Gratuitamente
                 </Button>
               </Link>
-              <span id="create-contract-desc" className="sr-only">
-                Inicia o processo de criação de um novo contrato fotovoltaico em 7 etapas
+              <span id="signup-desc" className="sr-only">
+                Criar conta gratuita na plataforma SolarCRM Pro
               </span>
               
               <Link href="/login">
-                <Button variant="secondary" size="lg" className="px-8" aria-describedby="admin-login-desc">
-                  🔐 Login Admin
+                <Button variant="secondary" size="lg" className="px-8" aria-describedby="login-desc">
+                  🔐 Fazer Login
                 </Button>
               </Link>
-              <span id="admin-login-desc" className="sr-only">
-                Acesso administrativo para gerenciar contratos e configurações do sistema
+              <span id="login-desc" className="sr-only">
+                Acessar sua conta na plataforma SolarCRM Pro
               </span>
             </HeroActions>
 
-            {/* Features */}
+            {/* Enterprise Features */}
             <section 
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-600"
-              aria-label="Principais funcionalidades do sistema"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full max-w-6xl animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-600"
+              aria-label="Principais funcionalidades da plataforma"
             >
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
-                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de velocidade">⚡</div>
-                <h3 className="text-white font-semibold mb-2">Rápido e Fácil</h3>
-                <p className="text-neutral-400 text-sm">Wizard intuitivo em 7 etapas para criação de contratos</p>
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de CRM">👥</div>
+                <h3 className="text-white font-semibold mb-2">CRM Avançado</h3>
+                <p className="text-neutral-400 text-sm">Gestão completa de leads com scoring automático e pipeline de vendas</p>
               </div>
               
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
-                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de segurança">🔒</div>
-                <h3 className="text-white font-semibold mb-2">Seguro</h3>
-                <p className="text-neutral-400 text-sm">Assinatura digital por email com código de verificação</p>
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de contratos">📋</div>
+                <h3 className="text-white font-semibold mb-2">Contratos Digitais</h3>
+                <p className="text-neutral-400 text-sm">Geração e assinatura digital com integração Gov.br</p>
               </div>
               
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
-                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de relatórios">📊</div>
-                <h3 className="text-white font-semibold mb-2">Completo</h3>
-                <p className="text-neutral-400 text-sm">Gestão completa com auditoria e rastreamento</p>
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de pagamentos">💳</div>
+                <h3 className="text-white font-semibold mb-2">Pagamentos</h3>
+                <p className="text-neutral-400 text-sm">Processamento automático com Stripe e cobrança recorrente</p>
+              </div>
+              
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de WhatsApp">💬</div>
+                <h3 className="text-white font-semibold mb-2">WhatsApp Business</h3>
+                <p className="text-neutral-400 text-sm">Integração completa para comunicação e campanhas automatizadas</p>
+              </div>
+              
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de analytics">📊</div>
+                <h3 className="text-white font-semibold mb-2">Analytics</h3>
+                <p className="text-neutral-400 text-sm">Dashboard em tempo real com relatórios avançados e forecasting</p>
+              </div>
+              
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 focus-within:ring-2 focus-within:ring-solar-500/50">
+                <div className="text-solar-400 text-3xl mb-3" role="img" aria-label="Ícone de API">🔌</div>
+                <h3 className="text-white font-semibold mb-2">API-First</h3>
+                <p className="text-neutral-400 text-sm">Arquitetura API-first com versionamento e documentação completa</p>
+              </div>
+            </section>
+
+            {/* Quick Access Links */}
+            <section className="mt-12 w-full max-w-4xl">
+              <h2 className="text-white text-xl font-semibold mb-6 text-center">Acesso Rápido</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link href="/admin" className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200 text-center">
+                  <div className="text-2xl mb-2">🏢</div>
+                  <div className="text-white text-sm font-medium">Admin</div>
+                </Link>
+                <Link href="/api-docs" className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200 text-center">
+                  <div className="text-2xl mb-2">📚</div>
+                  <div className="text-white text-sm font-medium">API Docs</div>
+                </Link>
+                <Link href="/analytics-demo" className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200 text-center">
+                  <div className="text-2xl mb-2">📈</div>
+                  <div className="text-white text-sm font-medium">Analytics</div>
+                </Link>
+                <Link href="/wizard" className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200 text-center">
+                  <div className="text-2xl mb-2">⚡</div>
+                  <div className="text-white text-sm font-medium">Contrato</div>
+                </Link>
               </div>
             </section>
           </HeroContent>
@@ -100,7 +145,7 @@ export default function Home() {
         {/* Integrated Mascot - Part of Hero Composition */}
         <HeroMascot
           src="/mascote.webp"
-          alt="ISOTEC Mascot"
+          alt="SolarCRM Pro Mascot"
         />
       </Hero>
     </>
