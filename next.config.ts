@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
   // Output configuration for Cloudflare Pages
   output: 'standalone',
   
+  // Environment variables for build time
+  env: {
+    CF_PAGES: process.env.CF_PAGES || '',
+    NEXT_PHASE: 'phase-production-build', // Set during build
+  },
+  
   // Disable cache for Cloudflare deployment to avoid large files
   ...(process.env.CF_PAGES && {
     distDir: '.next',
