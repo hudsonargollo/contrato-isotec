@@ -7,12 +7,7 @@
  * Requirements: 10.4 - API rate limiting and usage tracking
  */
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createClient } from '@/lib/supabase/server';
 
 // Redis client for rate limiting (fallback to in-memory if Redis not available)
 let redis: any = null;
@@ -238,6 +233,7 @@ export class APIRateLimitingService {
    * Get tenant's subscription tier
    */
   async getTenantSubscriptionTier(tenantId: string): Promise<SubscriptionTier> {
+    const supabase = createClient();
     const { data: tenant, error } = await supabase
       .from('tenants')
       .select('subscription')
@@ -260,6 +256,7 @@ export class APIRateLimitingService {
     keyId: string;
     active: boolean;
   } | null> {
+    const supabase = createClient();
     const { data: apiKeyData, error } = await supabase
       .from('api_keys')
       .select(`
@@ -291,6 +288,7 @@ export class APIRateLimitingService {
    */
   async recordAPIUsage(usage: Omit<APIUsageRecord, 'id' | 'timestamp'>): Promise<void> {
     try {
+      const supabase = createClient();
       await supabase
         .from('api_usage_logs')
         .insert({
@@ -311,6 +309,7 @@ export class APIRateLimitingService {
     startDate: Date,
     endDate: Date
   ): Promise<UsageAnalytics> {
+    const supabase = createClient();
     const { data: usageLogs, error } = await supabase
       .from('api_usage_logs')
       .select('*')
