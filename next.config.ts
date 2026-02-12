@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
   images: {
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -29,6 +30,7 @@ const nextConfig: NextConfig = {
       // Add patterns for external images if needed in the future
     ],
   },
+  
   // Enable compression for better performance
   compress: true,
   
@@ -36,8 +38,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   generateEtags: false,
   
-  // Output configuration for Cloudflare Pages
-  output: 'standalone',
+  // Remove standalone output for Cloudflare Pages compatibility
+  // Cloudflare Pages handles the server-side rendering automatically
   
   // Environment variables for build time
   env: {
@@ -45,18 +47,13 @@ const nextConfig: NextConfig = {
     NEXT_PHASE: 'phase-production-build', // Set during build
   },
   
-  // Disable cache for Cloudflare deployment to avoid large files
-  ...(process.env.CF_PAGES && {
-    distDir: '.next',
-    generateBuildId: () => 'build',
-  }),
-  
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
     // Enable tree shaking for better bundle optimization
     optimizeCss: true,
   },
+  
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
     // Cloudflare Pages specific optimizations

@@ -5,6 +5,10 @@ compatibility_date = "2024-02-11"
 # Pages build configuration
 pages_build_output_dir = ".next"
 
+# Build command for Next.js
+[build]
+command = "npm run build"
+
 # Pages configuration
 [env.production]
 compatibility_date = "2024-02-11"
