@@ -13,6 +13,9 @@ import BrandingManager from '@/components/tenant/BrandingManager';
 import BrandingPreview from '@/components/tenant/BrandingPreview';
 import { Card } from '@/components/ui/card';
 
+// Force dynamic rendering for this page since it contains interactive Client Components
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Configurações de Marca | SolarCRM Pro',
   description: 'Gerencie a identidade visual e personalização da sua empresa',
