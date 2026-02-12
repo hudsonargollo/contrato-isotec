@@ -14,7 +14,8 @@
     "cleanup:data": "tsx scripts/cleanup-expired-data.ts",
     "verify:db": "tsx scripts/verify-production-database.ts",
     "analyze": "ANALYZE=true npm run build",
-    "test:animations": "tsx scripts/test-animation-performance.ts"
+    "test:animations": "tsx scripts/test-animation-performance.ts",
+    "create-admin": "tsx scripts/create-admin-user.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
