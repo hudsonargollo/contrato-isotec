@@ -8,13 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { getWebhookService } from '@/lib/services/webhook';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 /**
  * GET /api/webhooks/deliveries
@@ -36,6 +31,8 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabase = createClient();
 
     // Build query
     let query = supabase
@@ -114,6 +111,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = createClient();
     let retryCount = 0;
 
     if (deliveryId) {
