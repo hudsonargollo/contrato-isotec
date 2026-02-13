@@ -258,17 +258,7 @@ function Sidebar({
           ))}
         </nav>
 
-        {/* Sidebar footer */}
-        <div className="p-4 border-t border-neutral-700">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-neutral-400 rounded-lg hover:text-white hover:bg-neutral-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-solar-500/50"
-            aria-label="Voltar ao site principal"
-          >
-            <LogOut className="w-5 h-5" aria-hidden="true" />
-            <span>Voltar ao Site</span>
-          </Link>
-        </div>
+
       </aside>
     </>
   );
