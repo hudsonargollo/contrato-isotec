@@ -22,6 +22,7 @@
 import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -88,7 +89,8 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
   // Initialize React Hook Form with Zod validation
   const methods = useForm<ContractFormData>({
     resolver: zodResolver(contractDraftSchema),
-    mode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       contractorName: '',
       contractorCPF: '',
@@ -103,11 +105,17 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
       addressState: '',
       locationLatitude: undefined,
       locationLongitude: undefined,
-      projectKWp: 0,
+      projectKWp: 1,
       installationDate: undefined,
-      services: [],
-      items: [],
-      contractValue: 0,
+      services: [
+        { description: 'Instalação de painéis solares', included: true },
+        { description: 'Configuração do sistema', included: true },
+        { description: 'Documentação técnica', included: false }
+      ],
+      items: [
+        { itemName: 'Painel Solar 550W', quantity: 1, unit: 'unidade', sortOrder: 0 }
+      ],
+      contractValue: 1000,
       paymentMethod: 'pix' as const,
     },
   });
@@ -216,12 +224,22 @@ export function ContractWizard({ onComplete, onCancel }: ContractWizardProps) {
 
   // Handle form submission
   const onSubmit = async (data: ContractFormData) => {
+    console.log('Form submission started with data:', data);
     setIsSubmitting(true);
     try {
-      await onComplete(data);
+      // Validate the data before submission
+      const validatedData = contractDraftSchema.parse(data);
+      console.log('Data validation passed:', validatedData);
+      
+      await onComplete(validatedData);
     } catch (error) {
       console.error('Error submitting contract:', error);
-      // Error handling will be added in future tasks
+      if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors);
+        alert(`Validation error: ${error.errors.map(e => e.message).join(', ')}`);
+      } else {
+        alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
