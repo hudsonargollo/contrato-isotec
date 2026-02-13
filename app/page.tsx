@@ -2,9 +2,12 @@
 
 // SolarCRM Pro - Multi-tenant SaaS Landing Page
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SkipLink } from '@/components/ui/keyboard-navigation';
+import { createClient } from '@/lib/supabase/client';
 import {
   Hero,
   HeroSection,
@@ -17,6 +20,48 @@ import {
 } from '@/components/ui/hero';
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    checkAuthAndRedirect();
+  }, []);
+
+  const checkAuthAndRedirect = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (user && !error) {
+        // Check if user has admin role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile && ['admin', 'super_admin'].includes(profile.role)) {
+          router.push('/admin');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-neutral-700 border-t-solar-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-400">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       {/* Skip Links for Accessibility */}

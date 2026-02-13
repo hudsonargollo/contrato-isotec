@@ -25,22 +25,24 @@ export function Step1ContractorInfo() {
     const value = e.target.value;
     const sanitized = value.replace(/\D/g, ''); // Remove non-digits
     
-    // Format as user types
-    let formatted = sanitized;
-    if (sanitized.length >= 3) {
-      formatted = sanitized.replace(/(\d{3})(\d{0,3})(\d{0,3})(\d{0,2})/, (_, p1, p2, p3, p4) => {
-        let result = p1;
-        if (p2) result += '.' + p2;
-        if (p3) result += '.' + p3;
-        if (p4) result += '-' + p4;
-        return result;
-      });
+    // Limit to 11 digits max
+    if (sanitized.length > 11) {
+      return;
     }
     
-    // Limit to 14 characters (XXX.XXX.XXX-XX)
-    if (formatted.length <= 14) {
-      setValue('contractorCPF', formatted, { shouldValidate: true });
+    // Format as user types
+    let formatted = sanitized;
+    if (sanitized.length > 3) {
+      if (sanitized.length <= 6) {
+        formatted = sanitized.replace(/(\d{3})(\d+)/, '$1.$2');
+      } else if (sanitized.length <= 9) {
+        formatted = sanitized.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+      } else {
+        formatted = sanitized.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+      }
     }
+    
+    setValue('contractorCPF', formatted, { shouldValidate: true });
   };
 
   return (
