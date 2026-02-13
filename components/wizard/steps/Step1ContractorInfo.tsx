@@ -20,7 +20,7 @@ export function Step1ContractorInfo() {
 
   const cpfValue = watch('contractorCPF') || '';
 
-  // Handle CPF formatting on change (not blur to avoid clearing)
+  // Handle CPF formatting on change
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const sanitized = value.replace(/\D/g, ''); // Remove non-digits
@@ -42,7 +42,12 @@ export function Step1ContractorInfo() {
       }
     }
     
-    setValue('contractorCPF', formatted, { shouldValidate: true });
+    // Update the form value
+    setValue('contractorCPF', formatted, { 
+      shouldValidate: true, 
+      shouldDirty: true,
+      shouldTouch: true 
+    });
   };
 
   return (
@@ -82,7 +87,7 @@ export function Step1ContractorInfo() {
           </Label>
           <MobileFormField
             id="contractorCPF"
-            name="contractorCPF"
+            {...register('contractorCPF', { required: 'CPF é obrigatório' })}
             value={cpfValue}
             placeholder="000.000.000-00"
             onChange={handleCPFChange}

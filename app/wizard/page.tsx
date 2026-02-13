@@ -64,6 +64,7 @@ export default function WizardPage() {
       };
 
       console.log('Submitting contract data:', JSON.stringify(contractData, null, 2));
+      console.log('CPF value being submitted:', contractData.contractorCPF);
 
       // Call the API to create the contract
       const response = await fetch('/api/contracts', {

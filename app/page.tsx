@@ -21,6 +21,7 @@ import {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -41,7 +42,9 @@ export default function Home() {
           .single();
         
         if (profile && ['admin', 'super_admin'].includes(profile.role)) {
-          router.push('/admin');
+          setIsRedirecting(true);
+          // Use replace to avoid back button issues
+          router.replace('/admin');
           return;
         }
       }
@@ -52,12 +55,14 @@ export default function Home() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-ocean-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-neutral-700 border-t-solar-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-neutral-400">Carregando...</p>
+          <p className="text-neutral-400">
+            {isRedirecting ? 'Redirecionando para o painel...' : 'Carregando...'}
+          </p>
         </div>
       </div>
     );
