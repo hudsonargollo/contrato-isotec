@@ -6,42 +6,24 @@
  * Requirements: 1.2, 2.4
  */
 
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, Controller } from 'react-hook-form';
 import { MobileFormField, MobileInputTypes } from '@/components/ui/mobile-form-field';
 import { Label } from '@/components/ui/label';
-import { useEffect } from 'react';
 
 export function Step1ContractorInfo() {
   const {
     register,
     formState: { errors },
-    setValue,
-    watch,
+    control,
   } = useFormContext();
 
-  const cpfValue = watch('contractorCPF') || '';
-
-  // Register CPF field with validation
-  useEffect(() => {
-    register('contractorCPF', { 
-      required: 'CPF é obrigatório',
-      validate: (value) => {
-        if (!value || value.length < 14) {
-          return 'CPF deve ter 11 dígitos';
-        }
-        return true;
-      }
-    });
-  }, [register]);
-
-  // Handle CPF formatting on change
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  // Handle CPF formatting
+  const formatCPF = (value: string) => {
     const sanitized = value.replace(/\D/g, ''); // Remove non-digits
     
     // Limit to 11 digits max
     if (sanitized.length > 11) {
-      return;
+      return value.slice(0, -1); // Return previous value if trying to exceed 11 digits
     }
     
     // Format as user types
@@ -56,12 +38,7 @@ export function Step1ContractorInfo() {
       }
     }
     
-    // Update the form value
-    setValue('contractorCPF', formatted, { 
-      shouldValidate: true, 
-      shouldDirty: true,
-      shouldTouch: true 
-    });
+    return formatted;
   };
 
   return (
