@@ -283,7 +283,7 @@ function Header({
 }) {
   return (
     <header className="h-16 bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700 flex items-center justify-between px-4 lg:px-6" role="banner">
-      {/* Left side - Menu button and breadcrumb */}
+      {/* Left side - Menu button */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -295,51 +295,26 @@ function Header({
         >
           <Menu className="w-5 h-5" />
         </Button>
-        
-        <div className="hidden lg:block">
-          <h1 className="text-lg font-semibold text-white">
-            Dashboard Administrativo
-          </h1>
-          <p className="text-sm text-neutral-400">
-            Sistema de Gestão ISOTEC
-          </p>
-        </div>
       </div>
 
-      {/* Right side - User info and actions */}
-      <div className="flex items-center gap-4">
-        {/* Quick actions */}
-        <div className="hidden md:flex items-center gap-2">
-          <Link href="/wizard">
-            <Button size="sm" className="bg-solar-500 hover:bg-solar-600 text-neutral-900" aria-label="Criar novo contrato">
-              Novo Contrato
-            </Button>
-          </Link>
-        </div>
+      {/* Right side - Actions and user */}
+      <div className="flex items-center gap-3">
+        {/* Quick action */}
+        <Link href="/wizard">
+          <Button size="sm" className="bg-solar-500 hover:bg-solar-600 text-neutral-900" aria-label="Criar novo contrato">
+            Novo Contrato
+          </Button>
+        </Link>
 
-        {/* User info */}
-        <div className="flex items-center gap-3" role="region" aria-label="Informações do usuário">
-          {userInfo && (
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-white">
-                {userInfo.name || 'Administrador'}
-              </p>
-              <p className="text-xs text-neutral-400">
-                {userInfo.role || 'Admin'}
-              </p>
-            </div>
-          )}
-          
-          {/* User avatar */}
-          <div 
-            className="w-8 h-8 bg-gradient-to-br from-solar-500 to-solar-600 rounded-full flex items-center justify-center"
-            role="img"
-            aria-label={`Avatar do usuário ${userInfo?.name || 'Administrador'}`}
-          >
-            <span className="text-sm font-semibold text-neutral-900" aria-hidden="true">
-              {userInfo?.name?.charAt(0) || 'A'}
-            </span>
-          </div>
+        {/* User avatar */}
+        <div 
+          className="w-8 h-8 bg-gradient-to-br from-solar-500 to-solar-600 rounded-full flex items-center justify-center"
+          role="img"
+          aria-label={`Avatar do usuário ${userInfo?.name || 'Admin'}`}
+        >
+          <span className="text-sm font-semibold text-neutral-900" aria-hidden="true">
+            {userInfo?.name?.charAt(0) || 'A'}
+          </span>
         </div>
       </div>
     </header>

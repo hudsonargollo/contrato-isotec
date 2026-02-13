@@ -19,11 +19,13 @@ export function Step1ContractorInfo() {
 
   // Handle CPF formatting
   const formatCPF = (value: string) => {
+    if (!value) return '';
+    
     const sanitized = value.replace(/\D/g, ''); // Remove non-digits
     
     // Limit to 11 digits max
     if (sanitized.length > 11) {
-      return value.slice(0, -1); // Return previous value if trying to exceed 11 digits
+      return value; // Don't change if trying to exceed 11 digits
     }
     
     // Format as user types
@@ -58,7 +60,7 @@ export function Step1ContractorInfo() {
           </Label>
           <MobileFormField
             id="contractorName"
-            {...register('contractorName')}
+            {...register('contractorName', { required: 'Nome é obrigatório' })}
             placeholder="Digite o nome completo"
             className={`mt-1 ${errors.contractorName ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
             autoCapitalize="words"
@@ -71,21 +73,39 @@ export function Step1ContractorInfo() {
           )}
         </div>
 
-        {/* CPF - Full Width */}
+        {/* CPF - Full Width with Controller */}
         <div>
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
-          <MobileFormField
-            id="contractorCPF"
+          <Controller
             name="contractorCPF"
-            value={cpfValue}
-            placeholder="000.000.000-00"
-            onChange={handleCPFChange}
-            maxLength={14}
-            mobileKeyboardType="numeric"
-            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
-            autoComplete="off"
+            control={control}
+            rules={{ 
+              required: 'CPF é obrigatório',
+              validate: (value) => {
+                if (!value || value.replace(/\D/g, '').length !== 11) {
+                  return 'CPF deve ter 11 dígitos';
+                }
+                return true;
+              }
+            }}
+            render={({ field: { onChange, value, onBlur } }) => (
+              <MobileFormField
+                id="contractorCPF"
+                value={value || ''}
+                placeholder="000.000.000-00"
+                onChange={(e) => {
+                  const formatted = formatCPF(e.target.value);
+                  onChange(formatted);
+                }}
+                onBlur={onBlur}
+                maxLength={14}
+                mobileKeyboardType="numeric"
+                className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+                autoComplete="off"
+              />
+            )}
           />
           {errors.contractorCPF && (
             <p className="text-xs text-red-400 mt-1">
