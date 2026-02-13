@@ -133,6 +133,19 @@ export default function ContractsListPage() {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
+  const formatCPF = (cpf: string) => {
+    // Remove all non-digits
+    const digits = cpf.replace(/\D/g, '');
+    
+    // Only format if we have exactly 11 digits
+    if (digits.length !== 11) {
+      return cpf;
+    }
+    
+    // Apply formatting: XXX.XXX.XXX-XX
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
   const getStatusBadge = (status: string) => {
     const styles = {
       pending_signature: 'bg-solar-500/10 text-solar-400 border-solar-500/20',
@@ -171,7 +184,7 @@ export default function ContractsListPage() {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-white mb-1">{contract.contractor_name}</h3>
-          <p className="text-sm text-neutral-400">CPF: {contract.contractor_cpf}</p>
+          <p className="text-sm text-neutral-400">CPF: {formatCPF(contract.contractor_cpf)}</p>
         </div>
         {getStatusBadge(contract.status)}
       </div>
@@ -438,7 +451,7 @@ export default function ContractsListPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-neutral-400 font-mono">{contract.contractor_cpf}</div>
+                            <div className="text-sm text-neutral-400 font-mono">{formatCPF(contract.contractor_cpf)}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-semibold text-white">{formatCurrency(contract.contract_value)}</div>
