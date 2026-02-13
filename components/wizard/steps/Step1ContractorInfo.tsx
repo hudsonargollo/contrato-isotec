@@ -9,7 +9,6 @@
 import { useFormContext } from 'react-hook-form';
 import { MobileFormField, MobileInputTypes } from '@/components/ui/mobile-form-field';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
 
 export function Step1ContractorInfo() {
   const {
@@ -18,28 +17,6 @@ export function Step1ContractorInfo() {
     setValue,
     watch,
   } = useFormContext();
-
-  // Local state for CPF field
-  const [cpfDisplay, setCpfDisplay] = useState('');
-  const cpfValue = watch('contractorCPF') || '';
-
-  // Register CPF field with React Hook Form
-  useEffect(() => {
-    register('contractorCPF', { 
-      required: 'CPF é obrigatório',
-      validate: (value) => {
-        if (!value || value.replace(/\D/g, '').length !== 11) {
-          return 'CPF deve ter 11 dígitos';
-        }
-        return true;
-      }
-    });
-  }, [register]);
-
-  // Sync local state with form state
-  useEffect(() => {
-    setCpfDisplay(cpfValue);
-  }, [cpfValue]);
 
   // Simple CPF formatting function
   const formatCPF = (value: string) => {
@@ -61,10 +38,10 @@ export function Step1ContractorInfo() {
     const inputValue = e.target.value;
     const formatted = formatCPF(inputValue);
     
-    // Update local display state
-    setCpfDisplay(formatted);
+    // Update the input value directly
+    e.target.value = formatted;
     
-    // Update form state
+    // Update form state with the formatted value
     setValue('contractorCPF', formatted, {
       shouldValidate: true,
       shouldDirty: true,
@@ -102,14 +79,22 @@ export function Step1ContractorInfo() {
           )}
         </div>
 
-        {/* CPF - Simple controlled input */}
+        {/* CPF - Simplified approach */}
         <div>
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
           <MobileFormField
             id="contractorCPF"
-            value={cpfDisplay}
+            {...register('contractorCPF', { 
+              required: 'CPF é obrigatório',
+              validate: (value) => {
+                if (!value || value.replace(/\D/g, '').length !== 11) {
+                  return 'CPF deve ter 11 dígitos';
+                }
+                return true;
+              }
+            })}
             placeholder="000.000.000-00"
             onChange={handleCPFChange}
             maxLength={14}
