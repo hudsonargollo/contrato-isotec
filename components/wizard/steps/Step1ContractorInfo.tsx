@@ -6,41 +6,70 @@
  * Requirements: 1.2, 2.4
  */
 
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { MobileFormField, MobileInputTypes } from '@/components/ui/mobile-form-field';
 import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
 
 export function Step1ContractorInfo() {
   const {
     register,
     formState: { errors },
-    control,
+    setValue,
+    watch,
   } = useFormContext();
 
-  // Handle CPF formatting
-  const formatCPF = (value: string) => {
-    if (!value) return '';
-    
-    const sanitized = value.replace(/\D/g, ''); // Remove non-digits
-    
-    // Limit to 11 digits max
-    if (sanitized.length > 11) {
-      return value; // Don't change if trying to exceed 11 digits
-    }
-    
-    // Format as user types
-    let formatted = sanitized;
-    if (sanitized.length > 3) {
-      if (sanitized.length <= 6) {
-        formatted = sanitized.replace(/(\d{3})(\d+)/, '$1.$2');
-      } else if (sanitized.length <= 9) {
-        formatted = sanitized.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
-      } else {
-        formatted = sanitized.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+  // Local state for CPF field
+  const [cpfDisplay, setCpfDisplay] = useState('');
+  const cpfValue = watch('contractorCPF') || '';
+
+  // Register CPF field with React Hook Form
+  useEffect(() => {
+    register('contractorCPF', { 
+      required: 'CPF é obrigatório',
+      validate: (value) => {
+        if (!value || value.replace(/\D/g, '').length !== 11) {
+          return 'CPF deve ter 11 dígitos';
+        }
+        return true;
       }
-    }
+    });
+  }, [register]);
+
+  // Sync local state with form state
+  useEffect(() => {
+    setCpfDisplay(cpfValue);
+  }, [cpfValue]);
+
+  // Simple CPF formatting function
+  const formatCPF = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
     
-    return formatted;
+    // Limit to 11 digits
+    const limited = digits.slice(0, 11);
+    
+    // Apply formatting
+    if (limited.length <= 3) return limited;
+    if (limited.length <= 6) return `${limited.slice(0, 3)}.${limited.slice(3)}`;
+    if (limited.length <= 9) return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6)}`;
+    return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6, 9)}-${limited.slice(9)}`;
+  };
+
+  // Handle CPF input change
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formatted = formatCPF(inputValue);
+    
+    // Update local display state
+    setCpfDisplay(formatted);
+    
+    // Update form state
+    setValue('contractorCPF', formatted, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
   };
 
   return (
@@ -73,39 +102,20 @@ export function Step1ContractorInfo() {
           )}
         </div>
 
-        {/* CPF - Full Width with Controller */}
+        {/* CPF - Simple controlled input */}
         <div>
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
-          <Controller
-            name="contractorCPF"
-            control={control}
-            rules={{ 
-              required: 'CPF é obrigatório',
-              validate: (value) => {
-                if (!value || value.replace(/\D/g, '').length !== 11) {
-                  return 'CPF deve ter 11 dígitos';
-                }
-                return true;
-              }
-            }}
-            render={({ field: { onChange, value, onBlur } }) => (
-              <MobileFormField
-                id="contractorCPF"
-                value={value || ''}
-                placeholder="000.000.000-00"
-                onChange={(e) => {
-                  const formatted = formatCPF(e.target.value);
-                  onChange(formatted);
-                }}
-                onBlur={onBlur}
-                maxLength={14}
-                mobileKeyboardType="numeric"
-                className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
-                autoComplete="off"
-              />
-            )}
+          <MobileFormField
+            id="contractorCPF"
+            value={cpfDisplay}
+            placeholder="000.000.000-00"
+            onChange={handleCPFChange}
+            maxLength={14}
+            mobileKeyboardType="numeric"
+            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+            autoComplete="off"
           />
           {errors.contractorCPF && (
             <p className="text-xs text-red-400 mt-1">
