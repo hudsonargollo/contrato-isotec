@@ -16,16 +16,20 @@ export function Step1ContractorInfo() {
     formState: { errors },
     setValue,
     watch,
+    clearErrors,
   } = useFormContext();
+
+  // Watch the CPF value to keep it in sync
+  const cpfValue = watch('contractorCPF') || '';
 
   // Simple CPF formatting function
   const formatCPF = (value: string) => {
     // Remove all non-digits
     const digits = value.replace(/\D/g, '');
-    
+
     // Limit to 11 digits
     const limited = digits.slice(0, 11);
-    
+
     // Apply formatting
     if (limited.length <= 3) return limited;
     if (limited.length <= 6) return `${limited.slice(0, 3)}.${limited.slice(3)}`;
@@ -37,16 +41,19 @@ export function Step1ContractorInfo() {
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const formatted = formatCPF(inputValue);
-    
-    // Update the input value directly
-    e.target.value = formatted;
-    
+
     // Update form state with the formatted value
     setValue('contractorCPF', formatted, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
     });
+
+    // Clear errors if we now have 11 digits
+    const digits = formatted.replace(/\D/g, '');
+    if (digits.length === 11) {
+      clearErrors('contractorCPF');
+    }
   };
 
   return (
@@ -79,14 +86,25 @@ export function Step1ContractorInfo() {
           )}
         </div>
 
-        {/* CPF - Simplified approach */}
+        {/* CPF - Controlled input with proper formatting */}
         <div>
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
           <MobileFormField
             id="contractorCPF"
-            {...register('contractorCPF', { 
+            value={cpfValue}
+            placeholder="000.000.000-00"
+            onChange={handleCPFChange}
+            maxLength={14}
+            mobileKeyboardType="numeric"
+            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+            autoComplete="off"
+          />
+          {/* Register the field for validation */}
+          <input
+            type="hidden"
+            {...register('contractorCPF', {
               required: 'CPF é obrigatório',
               validate: (value) => {
                 if (!value || value.replace(/\D/g, '').length !== 11) {
@@ -95,12 +113,6 @@ export function Step1ContractorInfo() {
                 return true;
               }
             })}
-            placeholder="000.000.000-00"
-            onChange={handleCPFChange}
-            maxLength={14}
-            mobileKeyboardType="numeric"
-            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
-            autoComplete="off"
           />
           {errors.contractorCPF && (
             <p className="text-xs text-red-400 mt-1">
