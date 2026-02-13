@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AdminLayout } from '@/components/ui/admin-layout';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -97,35 +97,30 @@ export default function AdminReportsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-neutral-400">Carregando relatórios...</div>
-          </div>
+      <div className="p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-neutral-400">Carregando relatórios...</div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   if (!reportData) {
     return (
-      <AdminLayout>
-        <div className="p-6">
-          <Card className="bg-neutral-800/50 border-neutral-700">
-            <CardContent className="p-12 text-center">
-              <BarChart3 className="w-12 h-12 text-neutral-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-white mb-2">Erro ao carregar relatórios</h3>
-              <p className="text-neutral-400">Tente novamente em alguns instantes</p>
-            </CardContent>
-          </Card>
-        </div>
-      </AdminLayout>
+      <div className="p-6">
+        <Card className="bg-neutral-800/50 border-neutral-700">
+          <CardContent className="p-12 text-center">
+            <BarChart3 className="w-12 h-12 text-neutral-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">Erro ao carregar relatórios</h3>
+            <p className="text-neutral-400">Tente novamente em alguns instantes</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -353,6 +348,6 @@ export default function AdminReportsPage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
