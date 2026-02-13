@@ -212,7 +212,7 @@ function Sidebar({
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-64 bg-neutral-900/95 backdrop-blur-sm border-r border-neutral-700 transform transition-transform duration-300 ease-in-out',
-          'lg:relative lg:translate-x-0 lg:z-auto',
+          'lg:relative lg:translate-x-0 lg:z-auto lg:flex-shrink-0',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
         aria-label="Menu de navegação principal"
@@ -363,7 +363,7 @@ export function AdminLayout({ children, userInfo }: AdminLayoutProps) {
       />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <Header onMenuClick={openSidebar} userInfo={userInfo} />
 

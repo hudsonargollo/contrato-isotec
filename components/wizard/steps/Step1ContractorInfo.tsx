@@ -9,6 +9,7 @@
 import { useFormContext } from 'react-hook-form';
 import { MobileFormField, MobileInputTypes } from '@/components/ui/mobile-form-field';
 import { Label } from '@/components/ui/label';
+import { useEffect } from 'react';
 
 export function Step1ContractorInfo() {
   const {
@@ -19,6 +20,19 @@ export function Step1ContractorInfo() {
   } = useFormContext();
 
   const cpfValue = watch('contractorCPF') || '';
+
+  // Register CPF field with validation
+  useEffect(() => {
+    register('contractorCPF', { 
+      required: 'CPF é obrigatório',
+      validate: (value) => {
+        if (!value || value.length < 14) {
+          return 'CPF deve ter 11 dígitos';
+        }
+        return true;
+      }
+    });
+  }, [register]);
 
   // Handle CPF formatting on change
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +101,7 @@ export function Step1ContractorInfo() {
           </Label>
           <MobileFormField
             id="contractorCPF"
-            {...register('contractorCPF', { required: 'CPF é obrigatório' })}
+            name="contractorCPF"
             value={cpfValue}
             placeholder="000.000.000-00"
             onChange={handleCPFChange}
