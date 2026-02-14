@@ -24,8 +24,7 @@ import {
   Home, 
   FileText, 
   Users, 
-  Settings, 
-  LogOut,
+  Settings,
   ChevronRight,
   BarChart3
 } from 'lucide-react';
