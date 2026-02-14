@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Search, Eye, FileText, ChevronLeft, ChevronRight, Calendar, DollarSign, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { AdminAuthWrapper } from '@/components/ui/admin-auth-wrapper';
 
 // Client component for admin contracts
 
@@ -290,8 +289,7 @@ export default function ContractsListPage() {
   };
 
   return (
-    <AdminAuthWrapper>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Contratos</h1>
@@ -506,6 +504,6 @@ export default function ContractsListPage() {
           )}
         </div>
       </div>
-    </AdminAuthWrapper>
+    </div>
   );
 }

@@ -19,9 +19,6 @@ export function Step1ContractorInfo() {
     clearErrors,
   } = useFormContext();
 
-  // Watch the CPF value to keep it in sync
-  const cpfValue = watch('contractorCPF') || '';
-
   // Simple CPF formatting function
   const formatCPF = (value: string) => {
     // Remove all non-digits
@@ -42,7 +39,10 @@ export function Step1ContractorInfo() {
     const inputValue = e.target.value;
     const formatted = formatCPF(inputValue);
 
-    // Update form state with the formatted value
+    // Update the input value directly
+    e.target.value = formatted;
+
+    // Update form state
     setValue('contractorCPF', formatted, {
       shouldValidate: true,
       shouldDirty: true,
@@ -86,24 +86,13 @@ export function Step1ContractorInfo() {
           )}
         </div>
 
-        {/* CPF - Controlled input with proper formatting */}
+        {/* CPF - Simple registered input with formatting */}
         <div>
           <Label htmlFor="contractorCPF" className="text-sm font-medium text-neutral-300">
             CPF <span className="text-red-400">*</span>
           </Label>
           <MobileFormField
             id="contractorCPF"
-            value={cpfValue}
-            placeholder="000.000.000-00"
-            onChange={handleCPFChange}
-            maxLength={14}
-            mobileKeyboardType="numeric"
-            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
-            autoComplete="off"
-          />
-          {/* Register the field for validation */}
-          <input
-            type="hidden"
             {...register('contractorCPF', {
               required: 'CPF é obrigatório',
               validate: (value) => {
@@ -113,6 +102,12 @@ export function Step1ContractorInfo() {
                 return true;
               }
             })}
+            placeholder="000.000.000-00"
+            onChange={handleCPFChange}
+            maxLength={14}
+            mobileKeyboardType="numeric"
+            className={`mt-1 ${errors.contractorCPF ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+            autoComplete="off"
           />
           {errors.contractorCPF && (
             <p className="text-xs text-red-400 mt-1">
