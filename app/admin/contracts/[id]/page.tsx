@@ -283,7 +283,8 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
     : 'A definir';
 
   return (
-    <div className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
+    <>
+      <div className="bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-700">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -767,6 +768,6 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
