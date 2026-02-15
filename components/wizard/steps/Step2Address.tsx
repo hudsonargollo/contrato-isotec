@@ -6,13 +6,12 @@
  * Requirements: 1.3, 1.4, 1.5, 3.4, 3A.1, 3A.2, 3A.3, 3A.4, 3A.5, 3A.6
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, MapPin } from 'lucide-react';
+import { MapPin, CheckCircle, Loader2 } from 'lucide-react';
 import { formatCEP } from '@/lib/validation/cep';
 import { lookupCEP, ViaCEPError, getViaCEPErrorMessage } from '@/lib/services/viacep';
 import { geocodeAddress } from '@/lib/services/googlemaps';
@@ -53,10 +52,18 @@ export function Step2Address() {
     ? `${streetValue}, ${cityValue} - ${stateValue}, ${formatCEP(cepValue)}`
     : undefined;
 
+  // Auto-trigger CEP lookup when CEP is complete (8 digits)
+  useEffect(() => {
+    const cleanCEP = cepValue?.replace(/\D/g, '') || '';
+    if (cleanCEP.length === 8 && !isLoadingCEP) {
+      handleCEPLookup();
+    }
+  }, [cepValue]);
+
   // Handle CEP lookup
   const handleCEPLookup = async () => {
-    if (!cepValue) {
-      setCepError('Digite um CEP para buscar');
+    const cleanCEP = cepValue?.replace(/\D/g, '') || '';
+    if (cleanCEP.length !== 8) {
       return;
     }
 
@@ -96,11 +103,11 @@ export function Step2Address() {
     }
   };
 
-  // Handle CEP formatting on blur
-  const handleCEPBlur = () => {
-    if (cepValue) {
-      setValue('addressCEP', formatCEP(cepValue));
-    }
+  // Handle CEP input change with formatting
+  const handleCEPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatCEP(value);
+    setValue('addressCEP', formatted);
   };
 
   // Handle location change from map
@@ -119,33 +126,28 @@ export function Step2Address() {
 
       {/* Form Content - Scrollable if needed */}
       <div className="flex-1 space-y-4 overflow-y-auto">
-        {/* CEP Lookup - Compact */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Label htmlFor="addressCEP" className="text-sm font-medium text-neutral-300">
-              CEP <span className="text-red-400">*</span>
-            </Label>
+        {/* CEP Input with Auto-lookup */}
+        <div>
+          <Label htmlFor="addressCEP" className="text-sm font-medium text-neutral-300">
+            CEP <span className="text-red-400">*</span>
+          </Label>
+          <div className="relative">
             <Input
               id="addressCEP"
               {...register('addressCEP')}
               placeholder="00000-000"
-              onBlur={handleCEPBlur}
+              onChange={handleCEPChange}
               maxLength={9}
-              className={`mt-1 ${errors.addressCEP ? 'border-red-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
+              className={`mt-1 pr-10 ${errors.addressCEP ? 'border-red-500' : cepSuccess ? 'border-green-500' : 'border-neutral-600'} bg-neutral-700/50 text-white placeholder-neutral-400`}
             />
-          </div>
-          <div className="flex items-end">
-            <Button
-              type="button"
-              onClick={handleCEPLookup}
-              loading={isLoadingCEP}
-              loadingText="..."
-              variant="secondary"
-              size="default"
-              className="bg-solar-500 hover:bg-solar-600 text-neutral-900"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
+            {/* Loading/Success Indicator */}
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-0.5">
+              {isLoadingCEP ? (
+                <Loader2 className="w-4 h-4 text-solar-400 animate-spin" />
+              ) : cepSuccess ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -154,10 +156,19 @@ export function Step2Address() {
           <p className="text-xs text-red-400">{errors.addressCEP.message as string}</p>
         )}
         {cepError && (
-          <p className="text-xs text-yellow-400">{cepError}</p>
+          <div className="p-2 bg-yellow-900/20 border border-yellow-700 rounded text-xs text-yellow-400">
+            {cepError}
+          </div>
         )}
         {cepSuccess && (
-          <p className="text-xs text-green-400">✓ Endereço encontrado!</p>
+          <div className="p-2 bg-green-900/20 border border-green-700 rounded text-xs text-green-400">
+            ✓ Endereço encontrado e preenchido automaticamente!
+          </div>
+        )}
+        {isLoadingCEP && (
+          <div className="p-2 bg-solar-900/20 border border-solar-700 rounded text-xs text-solar-400">
+            🔍 Buscando endereço...
+          </div>
         )}
 
         {/* Address Fields - Compact Grid */}
@@ -265,15 +276,15 @@ export function Step2Address() {
           )}
         </div>
 
-        {/* Google Maps - Compact */}
+        {/* Google Maps - Improved */}
         <div className="border-t border-neutral-700 pt-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <MapPin className="w-4 h-4 text-solar-400" />
             <Label className="text-sm font-medium text-neutral-300">
-              Localização <span className="text-xs text-neutral-500">(opcional)</span>
+              Localização no Mapa <span className="text-xs text-neutral-500">(opcional)</span>
             </Label>
           </div>
-          <div className="h-48 rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden">
             <GoogleMapsLocationPicker
               center={mapCenter}
               markerPosition={
@@ -295,7 +306,7 @@ export function Step2Address() {
       {/* Tip - Fixed at Bottom */}
       <div className="mt-4 p-3 bg-solar-500/10 border border-solar-500/20 rounded-lg">
         <p className="text-xs text-solar-300">
-          💡 Use o botão buscar para preencher automaticamente
+          💡 Digite o CEP para preenchimento automático do endereço
         </p>
       </div>
     </div>

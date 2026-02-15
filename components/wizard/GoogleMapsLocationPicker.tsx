@@ -265,7 +265,7 @@ export default function GoogleMapsLocationPicker({
       <div className="space-y-4">
         {/* Map Container or Placeholder */}
         {!shouldLoadMap ? (
-          <div className="w-full h-[400px] rounded-lg border-2 border-dashed border-neutral-600 bg-neutral-800/50 flex flex-col items-center justify-center text-center p-6">
+          <div className="w-full h-[300px] rounded-lg border-2 border-dashed border-neutral-600 bg-neutral-800/50 flex flex-col items-center justify-center text-center p-6">
             <MapPin className="w-12 h-12 text-neutral-500 mb-4" />
             <h3 className="text-lg font-medium text-neutral-300 mb-2">
               Localização no Mapa
@@ -296,8 +296,8 @@ export default function GoogleMapsLocationPicker({
         ) : (
           <div
             ref={mapRef}
-            className="w-full h-[400px] rounded-lg border border-neutral-600 bg-neutral-900"
-            style={{ minHeight: '400px' }}
+            className="w-full h-[300px] rounded-lg border border-neutral-600 bg-neutral-900"
+            style={{ minHeight: '300px' }}
           />
         )}
 

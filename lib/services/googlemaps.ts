@@ -61,7 +61,6 @@ export function getGoogleMapsLoader(): Loader {
     }
     
     console.log('Initializing Google Maps with API key:', apiKey.substring(0, 10) + '...');
-    console.log('Current domain:', typeof window !== 'undefined' ? window.location.hostname : 'server-side');
     
     loaderInstance = new Loader({
       apiKey: apiKey,
